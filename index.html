@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>yCODEX - Tester</title>
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAQ1JREFUOI2lk0ErRFEYhp97mzJZTYi1KGWh/AL2FhNRSrZkdlOS8hfsFSUby1kof0OysbDRZEGjZCELxWPhTO5c584V7+acTt/7vN/XOQf+qSR/oA4Cy8AkMATsA5vAHDAFHAN7SZK8AaQR6CEwAdwBF8AZsAt0AnAbaHSLK7n0KvAQCkZy4HpmXyEmdd1vvaob6pW9elJHiwBj6rl6ok6rq/7UYtQcgS2FLrJq/9bcVN8j6arjZeZ6gbGrRhngsgTQytanOfMMcATc98mYLUpeCwkv6k4k+UM9Va+zvuyDqIW1AwxHMm6BLaBa1EGqrvh1/8+RDhbUgT6j9cDm1ZbaDiM9qjfqgRr7P3/XJ0SoTEKszaewAAAAAElFTkSuQmCC">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000000;
+            --surface: #0a0a0a;
+            --surface-2: #111111;
+            --border: #1f1f1f;
+            --border-strong: #2a2a2a;
+            --text: #ffffff;
+            --muted: #8a8a8a;
+            --dim: #555;
+            --accent: #ffffff;
+            --danger: #ff3355;
+            --good: #ffffff;
+        }
+        * { box-sizing: border-box; }
+        html, body { background: var(--bg); }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            color: var(--text);
+            margin: 0;
+            padding: 28px 20px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-image:
+                linear-gradient(to right, rgba(255,255,255,0.035) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.035) 1px, transparent 1px);
+            background-size: 48px 48px;
+            background-position: center top;
+        }
+        body::before {
+            content: "";
+            position: fixed; inset: 0;
+            background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.06), transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        h1 {
+            font-family: 'Archivo Black', sans-serif;
+            color: var(--text);
+            margin: 5px 0;
+            text-align: center;
+            font-size: 1.8rem;
+            letter-spacing: -0.02em;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .card {
+            background: linear-gradient(180deg, #0c0c0c 0%, #060606 100%);
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 20px 40px -20px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.03);
+            text-align: center;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .card h2 {
+            font-family: 'Archivo Black', sans-serif;
+            margin: 0 0 14px 0;
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            font-size: 1rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            width: 100%;
+            text-align: left;
+        }
+
+        .card-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .log-box {
+            width: 100%;
+            background: #000;
+            border: 1px solid var(--border-strong);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            text-align: left;
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            font-size: 12px;
+            min-height: 54px;
+        }
+        .log-line { margin: 3px 0; color: var(--muted); }
+        .log-line .highlight { color: #fff; font-weight: 700; }
+        .log-line .code-highlight { color: var(--muted); font-weight: 500; text-decoration: underline; text-decoration-color: rgba(255,255,255,0.25); }
+
+        .extra-keys-container {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 12px;
+            padding: 10px;
+            background: #050505;
+            border-radius: 10px;
+            border: 1px dashed var(--border-strong);
+            min-height: 44px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .keyboard-wrapper {
+            display: flex;
+            gap: 12px;
+            background: #050505;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            width: 100%;
+            margin-top: 4px;
+        }
+
+        .main-keyboard {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 14 1 0%;
+        }
+
+        .num-keyboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: 5px;
+            flex: 3.5 1 0%;
+            border-left: 1px solid var(--border-strong);
+            padding-left: 12px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: flex-start;
+            gap: 5px;
+            width: 100%;
+        }
+
+        .key {
+            height: 3.2vw;
+            max-height: 46px;
+            min-height: 26px;
+            background: #161616;
+            color: #ededed;
+            border: 1px solid #232323;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 0.78vw;
+            transition: background-color 0.08s ease, transform 0.05s, border-color 0.08s;
+            box-shadow: 0 2px 0 #000, inset 0 1px 0 rgba(255,255,255,0.04);
+            flex-grow: 1;
+            flex-basis: 0;
+            user-select: none;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .num-keyboard-grid .key {
+            width: 100%;
+            height: 100%;
+            max-height: none;
+            min-height: auto;
+        }
+
+        @media (max-width: 1024px) {
+            .key { font-size: 9px; }
+        }
+
+        .key.pressing {
+            background: #ffffff !important;
+            color: #000 !important;
+            border-color: #ffffff;
+            transform: translateY(2px);
+            box-shadow: none;
+        }
+        .key.tested {
+            background: #1c1c1c;
+            border-color: #3a3a3a;
+            color: #b6ffb6;
+            box-shadow: 0 2px 0 #000, inset 0 0 0 1px rgba(255,255,255,0.08);
+        }
+        .key.tested::after {
+            content: "";
+        }
+
+        .key.backspace { flex-grow: 2; }
+        .key.tab { flex-grow: 1.5; }
+        .key.caps { flex-grow: 1.8; }
+        .key.enter { flex-grow: 2.2; }
+        .key.shift { flex-grow: 2.5; }
+        .key.space { flex-grow: 8; }
+        .key.modifier { flex-grow: 1.4; }
+
+        #MouseLeft      { grid-column: 1 / span 2; grid-row: 1; background: #0e0e0e; }
+        #MouseRight     { grid-column: 3 / span 2; grid-row: 1; background: #0e0e0e; }
+        #NumLock        { grid-column: 1; grid-row: 2; }
+        #NumpadDivide   { grid-column: 2; grid-row: 2; }
+        #NumpadMultiply { grid-column: 3; grid-row: 2; }
+        #NumpadSubtract { grid-column: 4; grid-row: 2; }
+        #Numpad7        { grid-column: 1; grid-row: 3; }
+        #Numpad8        { grid-column: 2; grid-row: 3; }
+        #Numpad9        { grid-column: 3; grid-row: 3; }
+        #NumpadAdd      { grid-column: 4; grid-row: 3 / span 2; }
+        #Numpad4        { grid-column: 1; grid-row: 4; }
+        #Numpad5        { grid-column: 2; grid-row: 4; }
+        #Numpad6        { grid-column: 3; grid-row: 4; }
+        #Numpad1        { grid-column: 1; grid-row: 5; }
+        #Numpad2        { grid-column: 2; grid-row: 5; }
+        #Numpad3        { grid-column: 3; grid-row: 5; }
+        #NumpadEnter    { grid-column: 4; grid-row: 5 / span 2; }
+        #Numpad0        { grid-column: 1 / span 2; grid-row: 6; }
+        #NumpadDecimal  { grid-column: 3; grid-row: 6; }
+
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 18px;
+            width: 100%;
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+            max-height: 200px;
+            background-color: #000;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            transform: scaleX(-1);
+        }
+
+        .meter-container {
+            width: 100%;
+            height: 14px;
+            background-color: #0f0f0f;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+        #mic-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #ffffff 0%, #999 100%);
+            transition: width 0.1s ease;
+        }
+
+        .audio-container {
+            display: flex;
+            width: 100%;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .audio-btn {
+            flex: 1;
+            padding: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            border: 1px solid var(--border-strong);
+            border-radius: 8px;
+            cursor: pointer;
+            color: #fff;
+            background: #0f0f0f;
+            transition: background 0.15s, transform 0.05s, border-color 0.15s;
+            letter-spacing: 0.02em;
+        }
+        .audio-btn:hover { background: #1a1a1a; border-color: #3a3a3a; }
+        .audio-btn:active { transform: translateY(1px); }
+
+        button.standard-btn {
+            background: #ffffff;
+            color: #000;
+            border: 1px solid #fff;
+            padding: 12px 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 12px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            transition: transform 0.05s, background 0.15s, color 0.15s;
+        }
+        button.standard-btn:hover { background: #e6e6e6; }
+        button.standard-btn:active { transform: translateY(1px); }
+        button.standard-btn.stop {
+            background: transparent;
+            color: #fff;
+            border-color: #3a3a3a;
+        }
+        button.standard-btn.stop:hover { background: #151515; border-color: #fff; }
+
+        /* Header brand */
+        .brand {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 1400px;
+            margin-bottom: 18px;
+            position: relative;
+            z-index: 1;
+        }
+        .brand-logo {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 1.4rem;
+            letter-spacing: 0.18em;
+            color: #fff;
+        }
+        .brand-tag {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.72rem;
+            color: var(--muted);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+        .brand-logo {
+            cursor: pointer;
+        }
+        .nav-btn {
+            background: transparent;
+            border: none;
+            padding: 0;
+            color: #606060;
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.25s;
+        }
+        .nav-btn::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #ffffff;
+            transition: width 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .nav-btn:hover { color: #f0f0f0; }
+        .nav-btn:hover::after { width: 100%; }
+        .tab-panel { display: none; width: 100%; }
+        .tab-panel.active { display: flex; flex-direction: column; gap: 18px; width: 100%; }
+
+        /* Commands list */
+        .cmd-intro {
+            width: 100%;
+            text-align: left;
+            color: var(--muted);
+            font-size: 0.85rem;
+            margin: -4px 0 4px 0;
+        }
+        .cmd-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+        .cmd-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            background: #0a0a0a;
+            border: 1px solid var(--border-strong);
+            border-radius: 10px;
+        }
+        .cmd-tag {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 0.72rem;
+            letter-spacing: 0.14em;
+            color: #fff;
+            background: #141414;
+            border: 1px solid var(--border-strong);
+            padding: 6px 10px;
+            border-radius: 6px;
+            min-width: 84px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .cmd-code {
+            flex: 1;
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+            font-size: 0.85rem;
+            color: #ededed;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 4px 0;
+        }
+        .cmd-meta {
+            font-size: 0.75rem;
+            color: var(--muted);
+            letter-spacing: 0.04em;
+        }
+        .cmd-meta .dot {
+            color: #ff9d2b;
+            margin-right: 6px;
+        }
+        .copy-btn {
+            background: #ffffff;
+            color: #000;
+            border: 1px solid #fff;
+            padding: 8px 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.05s;
+        }
+        .copy-btn:hover { background: #e6e6e6; }
+        .copy-btn:active { transform: translateY(1px); }
+        .copy-btn.copied { background: #1c1c1c; color: #fff; border-color: #3a3a3a; }
+
+        @media (max-width: 640px) {
+            .cmd-row { flex-wrap: wrap; }
+            .cmd-code { flex-basis: 100%; order: 3; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="brand">
+        <div class="brand-logo" onclick="switchTab('tester')">yCODEX</div>
+        <div class="tabs">
+            <button class="nav-btn" data-tab="commands" onclick="switchTab('commands')">Área de Comandos</button>
+        </div>
+    </div>
+
+    <div class="container">
+    <div class="tab-panel active" id="tab-tester">
+        <div class="card">
+            <h2>Teste de Teclado &amp; Mouse</h2>
+            <div class="card-content">
+                <div class="log-box" id="key-log">
+                    <div style="color: #555; text-align: center;">Pressione teclas ou botões do mouse para testar...</div>
+                </div>
+
+                <div class="keyboard-wrapper">
+                    <div class="main-keyboard">
+                        <div class="row">
+                            <div class="key" id="Escape">Esc</div>
+                            <div class="key" id="F1">F1</div>
+                            <div class="key" id="F2">F2</div>
+                            <div class="key" id="F3">F3</div>
+                            <div class="key" id="F4">F4</div>
+                            <div class="key" id="F5">F5</div>
+                            <div class="key" id="F6">F6</div>
+                            <div class="key" id="F7">F7</div>
+                            <div class="key" id="F8">F8</div>
+                            <div class="key" id="F9">F9</div>
+                            <div class="key" id="F10">F10</div>
+                            <div class="key" id="F11">F11</div>
+                            <div class="key" id="F12">F12</div>
+                        </div>
+                        <div class="row">
+                            <div class="key" id="Quote">'</div>
+                            <div class="key" id="Digit1">1</div>
+                            <div class="key" id="Digit2">2</div>
+                            <div class="key" id="Digit3">3</div>
+                            <div class="key" id="Digit4">4</div>
+                            <div class="key" id="Digit5">5</div>
+                            <div class="key" id="Digit6">6</div>
+                            <div class="key" id="Digit7">7</div>
+                            <div class="key" id="Digit8">8</div>
+                            <div class="key" id="Digit9">9</div>
+                            <div class="key" id="Digit0">0</div>
+                            <div class="key" id="Minus">-</div>
+                            <div class="key" id="Equal">=</div>
+                            <div class="key backspace" id="Backspace">Bksp</div>
+                        </div>
+                        <div class="row">
+                            <div class="key tab" id="Tab">Tab</div>
+                            <div class="key" id="KeyQ">Q</div>
+                            <div class="key" id="KeyW">W</div>
+                            <div class="key" id="KeyE">E</div>
+                            <div class="key" id="KeyR">R</div>
+                            <div class="key" id="KeyT">T</div>
+                            <div class="key" id="KeyY">Y</div>
+                            <div class="key" id="KeyU">U</div>
+                            <div class="key" id="KeyI">I</div>
+                            <div class="key" id="KeyO">O</div>
+                            <div class="key" id="KeyP">P</div>
+                            <div class="key" id="BracketLeft">´</div>
+                            <div class="key" id="BracketRight">[</div>
+                            <div class="key enter" id="Enter">Ent</div>
+                        </div>
+                        <div class="row">
+                            <div class="key caps" id="CapsLock">Caps</div>
+                            <div class="key" id="KeyA">A</div>
+                            <div class="key" id="KeyS">S</div>
+                            <div class="key" id="KeyD">D</div>
+                            <div class="key" id="KeyF">F</div>
+                            <div class="key" id="KeyG">G</div>
+                            <div class="key" id="KeyH">H</div>
+                            <div class="key" id="KeyJ">J</div>
+                            <div class="key" id="KeyK">K</div>
+                            <div class="key" id="KeyL">L</div>
+                            <div class="key" id="Semicolon">Ç</div>
+                            <div class="key" id="Quote">~</div>
+                            <div class="key" id="Backslash">]</div>
+                        </div>
+                        <div class="row">
+                            <div class="key shift" id="ShiftLeft">Shift L</div>
+                            <div class="key" id="IntlBackslash">\</div>
+                            <div class="key" id="KeyZ">Z</div>
+                            <div class="key" id="KeyX">X</div>
+                            <div class="key" id="KeyC">C</div>
+                            <div class="key" id="KeyV">V</div>
+                            <div class="key" id="KeyB">B</div>
+                            <div class="key" id="KeyN">N</div>
+                            <div class="key" id="KeyM">M</div>
+                            <div class="key" id="Comma">,</div>
+                            <div class="key" id="Period">.</div>
+                            <div class="key" id="Slash">;</div>
+                            <div class="key shift" id="ShiftRight">Shift R</div>
+                        </div>
+                        <div class="row">
+                            <div class="key modifier" id="ControlLeft">Ctrl L</div>
+                            <div class="key modifier" id="MetaLeft">Win</div>
+                            <div class="key modifier" id="AltLeft">Alt</div>
+                            <div class="key space" id="Space">Espaço</div>
+                            <div class="key modifier" id="AltRight">AltGr</div>
+                            <div class="key modifier" id="ControlRight">Ctrl R</div>
+                            <div class="key" id="ArrowLeft">←</div>
+                            <div class="key" id="ArrowUp">↑</div>
+                            <div class="key" id="ArrowDown">↓</div>
+                            <div class="key" id="ArrowRight">→</div>
+                        </div>
+                    </div>
+
+                    <div class="num-keyboard-grid">
+                        <div class="key" id="MouseLeft">M.Esq</div>
+                        <div class="key" id="MouseRight">M.Dir</div>
+
+                        <div class="key" id="NumLock">Num</div>
+                        <div class="key" id="NumpadDivide">/</div>
+                        <div class="key" id="NumpadMultiply">*</div>
+                        <div class="key" id="NumpadSubtract">-</div>
+
+                        <div class="key" id="Numpad7">7</div>
+                        <div class="key" id="Numpad8">8</div>
+                        <div class="key" id="Numpad9">9</div>
+                        <div class="key" id="NumpadAdd">+</div>
+
+                        <div class="key" id="Numpad4">4</div>
+                        <div class="key" id="Numpad5">5</div>
+                        <div class="key" id="Numpad6">6</div>
+
+                        <div class="key" id="Numpad1">1</div>
+                        <div class="key" id="Numpad2">2</div>
+                        <div class="key" id="Numpad3">3</div>
+                        <div class="key" id="NumpadEnter">Ent</div>
+
+                        <div class="key num-zero" id="Numpad0">0</div>
+                        <div class="key" id="NumpadDecimal">.</div>
+                    </div>
+                </div>
+
+                <div class="extra-keys-container" id="extra-keys-box">
+                    <span style="color: #555; font-size: 0.8rem;">Teclas adicionais fora do padrão aparecem aqui</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-grid">
+            <div class="card">
+                <h2>WebCam</h2>
+                <div class="card-content">
+                    <video id="video" autoplay playsinline></video>
+                </div>
+                <button id="btn-webcam" class="standard-btn" onclick="toggleWebcam()">Ligar Câmera</button>
+            </div>
+
+            <div class="card">
+                <h2>Microfone</h2>
+                <div class="card-content">
+                    <div class="meter-container">
+                        <div id="mic-bar"></div>
+                    </div>
+                    <p id="mic-status" style="color: #777; font-size: 0.78rem; margin: 8px 0 0 0; letter-spacing: 0.08em; text-transform: uppercase;">Desativado</p>
+                </div>
+                <button id="btn-mic" class="standard-btn" onclick="toggleMicrophone()">Ligar Microfone</button>
+            </div>
+
+            <div class="card">
+                <h2>Áudio (Estéreo)</h2>
+                <div class="card-content">
+                    <div class="audio-container">
+                        <button class="audio-btn btn-left" onclick="playStereoAudio(-1)">← Esquerdo</button>
+                        <button class="audio-btn btn-right" onclick="playStereoAudio(1)">Direito →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><!-- /tab-tester -->
+
+    <div class="tab-panel" id="tab-commands">
+        <div class="card">
+            <h2>Área de Comandos</h2>
+            <div class="card-content" style="align-items: stretch;">
+                <p class="cmd-intro">Comandos salvos. Clique em <strong style="color:#fff">Copy</strong> para enviar direto à área de transferência.</p>
+                <div class="cmd-list" id="cmd-list">
+
+                    <!--
+                    ============================================================
+                    COMO ADICIONAR UM NOVO COMANDO
+                    ============================================================
+                    Copie o bloco "MODELO" abaixo, cole logo acima ou abaixo
+                    de outro bloco (dentro desta mesma div id="cmd-list"),
+                    e troque apenas os textos indicados:
+
+                    - cmd-tag   -> nome curto/etiqueta (ex: ROBLOX, FIVEM, CS2)
+                    - cmd-code  -> o comando/código que será copiado ao clicar
+                    - cmd-meta  -> texto de status (ex: validade, tipo de trava)
+
+                    <div class="cmd-row">
+                        <span class="cmd-tag">TAG</span>
+                        <span class="cmd-code">CODIGO_AQUI</span>
+                        <span class="cmd-meta"><span class="dot">●</span>status aqui</span>
+                        <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
+                    </div>
+
+                    Basta duplicar quantos blocos quiser, um embaixo do outro.
+                    ============================================================
+                    -->
+
+                    <div class="cmd-row">
+                        <span class="cmd-tag">WINDOWS</span>
+                        <span class="cmd-code">irm http://get.activated.win | iex</span>
+                        <span class="cmd-meta"><span class="dot">●</span>Ativador Windows/Office</span>
+                        <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
+                    </div>
+
+                    <div class="cmd-row">
+                        <span class="cmd-tag">MAC</span>
+                        <span class="cmd-code">sysctl -n machdep.cpu.brand_string</span>
+                        <span class="cmd-meta"><span class="dot">●</span>Obter info CPU</span>
+                        <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><!-- /tab-commands -->
+    </div>
+
+    <script>
+        // --- TABS ---
+        function switchTab(name) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
+        }
+
+        // --- COPY TO CLIPBOARD (mac / windows / fallback) ---
+        async function copyText(text) {
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                }
+            } catch (e) { /* fallback below */ }
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.focus(); ta.select();
+                const ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                return ok;
+            } catch (e) { return false; }
+        }
+
+        async function copyCmd(btn) {
+            const row = btn.closest('.cmd-row');
+            const code = row.querySelector('.cmd-code').innerText.trim();
+            const ok = await copyText(code);
+            const original = btn.innerText;
+            btn.innerText = ok ? 'Copied' : 'Erro';
+            btn.classList.add('copied');
+            setTimeout(() => { btn.innerText = original; btn.classList.remove('copied'); }, 1400);
+        }
+
+        // --- LÓGICA DO TECLADO ---
+        const logBox = document.getElementById('key-log');
+        const extraKeysBox = document.getElementById('extra-keys-box');
+        let logs = [];
+
+        function updateLog(keyName, keyCode) {
+            const time = new Date().toLocaleTimeString();
+            logs.unshift(`<div class="log-line">[${time}] Action: <span class="highlight">${keyName}</span> | <span class="code-highlight">id="${keyCode}"</span></div>`);
+            if(logs.length > 2) logs.pop();
+            logBox.innerHTML = logs.join('');
+        }
+
+        function handleDynamicKey(e) {
+            let keyElement = document.getElementById(e.code);
+            if (!keyElement && e.code) {
+                if (extraKeysBox.querySelector('span')) extraKeysBox.innerHTML = '';
+                keyElement = document.createElement('div');
+                keyElement.className = 'key';
+                keyElement.id = e.code;
+                keyElement.innerText = e.key.toUpperCase() === " " ? "Espaço" : e.key;
+                keyElement.style.padding = '2px 10px';
+                keyElement.style.flexGrow = '0';
+                keyElement.style.minWidth = '50px';
+                keyElement.style.height = '35px';
+                extraKeysBox.appendChild(keyElement);
+            }
+            return keyElement;
+        }
+
+        window.addEventListener('keydown', function(e) {
+            e.preventDefault();
+            updateLog(e.key, e.code);
+            const keyElement = handleDynamicKey(e);
+            if (keyElement) {
+                keyElement.classList.remove('tested');
+                keyElement.classList.add('pressing');
+            }
+        });
+
+        window.addEventListener('keyup', function(e) {
+            e.preventDefault();
+            const keyElement = document.getElementById(e.code);
+            if (keyElement) {
+                keyElement.classList.remove('pressing');
+                keyElement.classList.add('tested');
+            }
+        });
+
+        window.addEventListener('mousedown', function(e) {
+            let id = e.button === 0 ? "MouseLeft" : e.button === 2 ? "MouseRight" : null;
+            let label = e.button === 0 ? "M. Esquerdo" : e.button === 2 ? "M. Direito" : null;
+            if (id) {
+                updateLog(label, id);
+                const btn = document.getElementById(id);
+                if (btn) { btn.classList.remove('tested'); btn.classList.add('pressing'); }
+            }
+        });
+
+        window.addEventListener('mouseup', function(e) {
+            let id = e.button === 0 ? "MouseLeft" : e.button === 2 ? "MouseRight" : null;
+            if (id) {
+                const btn = document.getElementById(id);
+                if (btn) { btn.classList.remove('pressing'); btn.classList.add('tested'); }
+            }
+        });
+
+        window.addEventListener('contextmenu', e => e.preventDefault());
+
+        // --- LÓGICA PERIFÉRICOS ---
+        let webcamStream = null;
+        async function toggleWebcam() {
+            const video = document.getElementById('video');
+            const btn = document.getElementById('btn-webcam');
+            if (webcamStream) {
+                webcamStream.getTracks().forEach(t => t.stop());
+                webcamStream = null; video.srcObject = null;
+                btn.innerText = "Ligar Câmera"; btn.classList.remove('stop');
+            } else {
+                try {
+                    webcamStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    video.srcObject = webcamStream;
+                    btn.innerText = "Desligar Câmera"; btn.classList.add('stop');
+                } catch { alert("Erro na WebCam."); }
+            }
+        }
+
+        let micStream = null, audioContextMic = null, analyser = null, javascriptNode = null;
+        async function toggleMicrophone() {
+            const btn = document.getElementById('btn-mic');
+            const micBar = document.getElementById('mic-bar');
+            const micStatus = document.getElementById('mic-status');
+            if (micStream) {
+                if(javascriptNode) javascriptNode.disconnect();
+                if(analyser) analyser.disconnect();
+                micStream.getTracks().forEach(t => t.stop());
+                micStream = null; micBar.style.width = "0%";
+                micStatus.innerText = "Desativado"; btn.innerText = "Ligar Microfone"; btn.classList.remove('stop');
+            } else {
+                try {
+                    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    btn.innerText = "Desligar Microfone"; btn.classList.add('stop');
+                    micStatus.innerText = "Capturando...";
+                    audioContextMic = new (window.AudioContext || window.webkitAudioContext)();
+                    const source = audioContextMic.createMediaStreamSource(micStream);
+                    analyser = audioContextMic.createAnalyser(); analyser.fftSize = 256;
+                    javascriptNode = audioContextMic.createScriptProcessor(256, 1, 1);
+                    source.connect(analyser); analyser.connect(javascriptNode); javascriptNode.connect(audioContextMic.destination);
+                    javascriptNode.onaudioprocess = function() {
+                        const array = new Uint8Array(analyser.frequencyBinCount);
+                        analyser.getByteFrequencyData(array);
+                        let values = 0;
+                        for (let i = 0; i < array.length; i++) values += array[i];
+                        micBar.style.width = Math.min(100, Math.round(((values / array.length) / 120) * 100)) + "%";
+                    };
+                } catch { alert("Erro no Microfone."); }
+            }
+        }
+
+        function playStereoAudio(panValue) {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if (!ctx) return;
+            const osc = ctx.createOscillator(); const gain = ctx.createGain();
+            const panner = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+            osc.frequency.setValueAtTime(440, ctx.currentTime);
+            gain.gain.setValueAtTime(0.4, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
+            if (panner) {
+                panner.pan.setValueAtTime(panValue, ctx.currentTime);
+                osc.connect(gain).connect(panner).connect(ctx.destination);
+            } else { osc.connect(gain).connect(ctx.destination); }
+            osc.start(); osc.stop(ctx.currentTime + 0.6);
+        }
+    </script>
+</body>
+</html>
