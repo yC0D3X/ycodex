@@ -432,6 +432,7 @@
             color: #ededed;
             overflow-x: auto;
             white-space: nowrap;
+            text-align: center;
             padding: 4px 0;
         }
         .cmd-meta {
@@ -458,6 +459,74 @@
         }
         .copy-btn:hover { background: #e6e6e6; }
         .copy-btn:active { transform: translateY(1px); }
+
+        /* Downloads */
+        .dl-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+        }
+        .dl-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            background: #0a0a0a;
+            border: 1px solid var(--border-strong);
+            border-radius: 10px;
+        }
+        .dl-name {
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 0.72rem;
+            letter-spacing: 0.14em;
+            color: #fff;
+            background: #141414;
+            border: 1px solid var(--border-strong);
+            padding: 6px 10px;
+            border-radius: 6px;
+            min-width: 110px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .dl-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .dl-desc {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            color: #ededed;
+        }
+        .dl-meta {
+            font-size: 0.75rem;
+            color: var(--muted);
+            letter-spacing: 0.04em;
+        }
+        .dl-meta .dot {
+            color: #ff9d2b;
+            margin-right: 6px;
+        }
+        .dl-meta.official .dot { color: #4dd0ff; }
+        .dl-btn {
+            background: #ffffff;
+            color: #000;
+            border: 1px solid #fff;
+            padding: 8px 16px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background 0.15s, transform 0.05s;
+        }
+        .dl-btn:hover { background: #e6e6e6; }
+        .dl-btn:active { transform: translateY(1px); }
         .copy-btn.copied { background: #1c1c1c; color: #fff; border-color: #3a3a3a; }
 
         @media (max-width: 640px) {
@@ -472,6 +541,7 @@
         <div class="brand-logo" onclick="switchTab('tester')">yCODEX</div>
         <div class="tabs">
             <button class="nav-btn" data-tab="commands" onclick="switchTab('commands')">Área de Comandos</button>
+            <button class="nav-btn" data-tab="downloads" onclick="switchTab('downloads')">Downloads</button>
         </div>
     </div>
 
@@ -690,6 +760,72 @@
             </div>
         </div>
     </div><!-- /tab-commands -->
+
+    <div class="tab-panel" id="tab-downloads">
+        <div class="card">
+            <h2>Downloads</h2>
+            <div class="card-content" style="align-items: stretch;">
+                <p class="cmd-intro">Ferramentas usadas com frequência. Clique em <strong style="color:#fff">Baixar</strong>.</p>
+                <div class="dl-list" id="dl-list">
+
+                    <!--
+                    ============================================================
+                    COMO ADICIONAR UM NOVO DOWNLOAD
+                    ============================================================
+                    Existem 2 tipos de bloco, use o que fizer sentido:
+
+                    TIPO "FIXO" -> você mesmo hospeda o arquivo.
+                      1. Vá no repositório no GitHub > aba "Releases" >
+                         "Create a new release".
+                      2. Anexe o .exe em "Attach binaries" e publique.
+                      3. Clique com botão direito no arquivo publicado >
+                         "Copiar link" e cole em dl-btn href abaixo.
+                      A bolinha desse tipo fica LARANJA (versão travada por você).
+
+                    TIPO "OFICIAL" -> aponta direto pro site do fabricante,
+                      sempre baixa a versão mais nova de lá (ex: Nvidia App).
+                      A bolinha desse tipo fica AZUL.
+
+                    Campos:
+                    - dl-name -> nome curto do programa (ex: CPU-Z, STRESS MY PC)
+                    - dl-desc -> descrição / versão (ex: "v2.15 - benchmark de CPU")
+                    - dl-meta -> texto pequeno de status (tamanho do arquivo, fonte)
+                    - href    -> link direto do arquivo (Release ou site oficial)
+
+                    <div class="dl-row">
+                        <span class="dl-name">TAG</span>
+                        <div class="dl-info">
+                            <span class="dl-desc">Nome do app - versão</span>
+                            <span class="dl-meta"><span class="dot">●</span>tamanho / observação</span>
+                        </div>
+                        <a class="dl-btn" href="LINK_AQUI" target="_blank" rel="noopener">Baixar</a>
+                    </div>
+
+                    Basta duplicar quantos blocos quiser, um embaixo do outro.
+                    ============================================================
+                    -->
+
+                    <div class="dl-row">
+                        <span class="dl-name">CPU-Z</span>
+                        <div class="dl-info">
+                            <span class="dl-desc">CPU-Z - v2.15</span>
+                            <span class="dl-meta"><span class="dot">●</span>versão fixa hospedada aqui</span>
+                        </div>
+                        <a class="dl-btn" href="#" target="_blank" rel="noopener">Baixar</a>
+                    </div>
+
+                    <div class="dl-row">
+                        <span class="dl-name">NVIDIA APP</span>
+                        <div class="dl-info">
+                            <span class="dl-desc">Nvidia App - instalador oficial</span>
+                            <span class="dl-meta official"><span class="dot">●</span>sempre a versão mais nova (via redirect automático)</span>
+                        </div>
+                        <a class="dl-btn" href="https://nvidia-redirect.higordmeneses.workers.dev/" rel="noopener">Baixar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><!-- /tab-downloads -->
     </div>
 
     <script>
