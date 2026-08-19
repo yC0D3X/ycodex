@@ -388,6 +388,86 @@
         }
         .nav-btn:hover { color: #f0f0f0; }
         .nav-btn:hover::after { width: 100%; }
+
+        /* Teste de Tela */
+        .st-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 10px;
+            width: 100%;
+        }
+        .st-swatch {
+            aspect-ratio: 1;
+            border-radius: 10px;
+            border: 1px solid var(--border-strong);
+            cursor: pointer;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 8px;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .st-swatch:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+        .st-swatch span {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 5px;
+            background: rgba(0,0,0,0.55);
+            color: #fff;
+            mix-blend-mode: difference;
+        }
+        .st-auto-btn {
+            background: #ffffff;
+            color: #000;
+            border: 1px solid #fff;
+            padding: 12px 20px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            border-radius: 8px;
+            cursor: pointer;
+            align-self: flex-start;
+            transition: background 0.15s, transform 0.05s;
+        }
+        .st-auto-btn:hover { background: #e6e6e6; }
+        .st-auto-btn:active { transform: translateY(1px); }
+
+        #screen-test-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            cursor: pointer;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        #screen-test-overlay .st-hint {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.05em;
+            color: #fff;
+            background: rgba(0,0,0,0.55);
+            padding: 8px 16px;
+            border-radius: 999px;
+            margin-bottom: 28px;
+            opacity: 0;
+            animation: stHintFade 3s ease forwards;
+            pointer-events: none;
+        }
+        @keyframes stHintFade {
+            0% { opacity: 0; }
+            15% { opacity: 1; }
+            75% { opacity: 1; }
+            100% { opacity: 0; }
+        }
         .tab-panel { display: none; width: 100%; }
         .tab-panel.active { display: flex; flex-direction: column; gap: 18px; width: 100%; }
 
@@ -552,6 +632,7 @@
         <div class="tabs">
             <button class="nav-btn" data-tab="commands" onclick="switchTab('commands')">Área de Comandos</button>
             <button class="nav-btn" data-tab="downloads" onclick="switchTab('downloads')">Downloads</button>
+            <button class="nav-btn" data-tab="screentest" onclick="switchTab('screentest')">Tela</button>
         </div>
     </div>
 
@@ -836,9 +917,145 @@
             </div>
         </div>
     </div><!-- /tab-downloads -->
+
+    <div class="tab-panel" id="tab-screentest">
+        <div class="card">
+            <h2>Tela</h2>
+            <div class="card-content" style="align-items: stretch; gap: 20px;">
+                <p class="cmd-intro">Clique numa cor para abrir em tela cheia (pixels mortos, uniformidade, brilho). Clique ou aperte ESC pra sair.</p>
+
+                <button class="st-auto-btn" onclick="stStartAuto()">▶ Reprodução Automática</button>
+
+                <div class="st-grid" id="st-grid">
+                    <!-- As cores são geradas via JS a partir do array stColors -->
+                </div>
+            </div>
+        </div>
+    </div><!-- /tab-screentest -->
+    </div>
+
+    <div id="screen-test-overlay" onclick="stClose()">
+        <div class="st-hint">← → para trocar de cor · clique ou ESC para sair</div>
     </div>
 
     <script>
+        // --- TESTE DE TELA ---
+        const stColors = [
+            { nome: 'Branco', cor: '#ffffff' },
+            { nome: 'Preto', cor: '#000000' },
+            { nome: 'Cinza 50%', cor: '#808080' },
+            { nome: 'Vermelho', cor: '#ff0000' },
+            { nome: 'Verde', cor: '#00ff00' },
+            { nome: 'Azul', cor: '#0000ff' },
+            { nome: 'Amarelo', cor: '#ffff00' },
+            { nome: 'Ciano', cor: '#00ffff' },
+            { nome: 'Magenta', cor: '#ff00ff' },
+        ];
+        let stAutoTimer = null;
+        let stIndex = 0;
+
+        function stRenderGrid() {
+            const grid = document.getElementById('st-grid');
+            grid.innerHTML = stColors.map(c => `
+                <div class="st-swatch" style="background:${c.cor}" onclick="stOpen('${c.cor}')">
+                    <span>${c.nome}</span>
+                </div>
+            `).join('');
+        }
+
+        function stOpen(cor) {
+            const overlay = document.getElementById('screen-test-overlay');
+            const idx = stColors.findIndex(c => c.cor === cor);
+            stIndex = idx >= 0 ? idx : 0;
+            overlay.style.background = cor;
+            overlay.style.display = 'flex';
+            if (overlay.requestFullscreen) {
+                overlay.requestFullscreen().catch(() => {});
+            }
+        }
+
+        function stGoTo(delta) {
+            const overlay = document.getElementById('screen-test-overlay');
+            if (overlay.style.display !== 'flex') return;
+            stStopAuto();
+            stIndex = (stIndex + delta + stColors.length) % stColors.length;
+            overlay.style.background = stColors[stIndex].cor;
+        }
+
+        function stClose() {
+            stStopAuto();
+            const overlay = document.getElementById('screen-test-overlay');
+            overlay.style.display = 'none';
+            if (document.fullscreenElement) {
+                document.exitFullscreen().catch(() => {});
+            }
+        }
+
+        function stStartAuto() {
+            stIndex = 0;
+            stOpen(stColors[0].cor);
+            stAutoTimer = setInterval(() => {
+                stIndex = (stIndex + 1) % stColors.length;
+                document.getElementById('screen-test-overlay').style.background = stColors[stIndex].cor;
+            }, 2500);
+        }
+
+        function stStopAuto() {
+            if (stAutoTimer) {
+                clearInterval(stAutoTimer);
+                stAutoTimer = null;
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) stClose();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') stClose();
+            if (e.key === 'ArrowRight') stGoTo(1);
+            if (e.key === 'ArrowLeft') stGoTo(-1);
+        });
+
+        stRenderGrid();
+    </script>
+
+    <script>
+        // --- DETECÇÃO DE SISTEMA OPERACIONAL ---
+        function detectarSO() {
+            const ua = navigator.userAgent;
+            if (/Mac|iPhone|iPad|iPod/.test(ua)) return 'MAC';
+            if (/Win/.test(ua)) return 'WINDOWS';
+            if (/Linux/.test(ua)) return 'LINUX';
+            return 'DESCONHECIDO';
+        }
+
+        function ajustarLayoutTeclado() {
+            const so = detectarSO();
+            if (so !== 'MAC') return; // layout padrão (Windows) já é o do HTML
+
+            // No Mac: Ctrl vira Control, Win/Cmd vira Command, Alt vira Option
+            const rotulos = {
+                ControlLeft: 'Control',
+                MetaLeft: 'Command',
+                AltLeft: 'Option',
+                AltRight: 'Option R',
+                ControlRight: 'Control R'
+            };
+            Object.entries(rotulos).forEach(([id, texto]) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = texto;
+            });
+
+            // Ordem física do Mac é diferente: Control, Option, Command (da esquerda pra direita)
+            const metaKey = document.getElementById('MetaLeft');
+            const altKey = document.getElementById('AltLeft');
+            if (metaKey && altKey && metaKey.parentElement) {
+                metaKey.parentElement.insertBefore(altKey, metaKey);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', ajustarLayoutTeclado);
+
         // --- TABS ---
         function switchTab(name) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
