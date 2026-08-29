@@ -227,6 +227,11 @@
         .key.shift { flex-grow: 2.5; }
         .key.space { flex-grow: 8; }
         .key.modifier { flex-grow: 1.4; }
+        .key svg {
+            width: 15px;
+            height: 15px;
+            display: block;
+        }
 
         #MouseLeft      { grid-column: 1 / span 2; grid-row: 1; background: #0e0e0e; }
         #MouseRight     { grid-column: 3 / span 2; grid-row: 1; background: #0e0e0e; }
@@ -303,6 +308,52 @@
         }
         .audio-btn:hover { background: #1a1a1a; border-color: #3a3a3a; }
         .audio-btn:active { transform: translateY(1px); }
+        .audio-btn.playing {
+            background: #ffffff;
+            color: #000;
+            border-color: #ffffff;
+        }
+        .audio-btn.playing:hover { background: #e6e6e6; }
+
+        .volume-row {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .volume-row label {
+            font-size: 0.75rem;
+            color: var(--muted);
+            letter-spacing: 0.04em;
+        }
+        .volume-row input[type="range"] {
+            width: 100%;
+            accent-color: #ffffff;
+        }
+
+        .audio-results {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 12px 14px;
+            background: #050505;
+            border: 1px solid var(--border-strong);
+            border-radius: 10px;
+        }
+        .audio-result {
+            font-size: 0.8rem;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .audio-result .dot-status {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+        .audio-result.done { color: #b6ffb6; }
+        .audio-result.done .dot-status { color: #b6ffb6; }
 
         button.standard-btn {
             background: #ffffff;
@@ -628,7 +679,7 @@
 <body>
 
     <div class="brand">
-        <div class="brand-logo" onclick="switchTab('tester')">yCODEX</div>
+        <div class="brand-logo" onclick="switchTab('tester')">ycodex</div>
         <div class="tabs">
             <button class="nav-btn" data-tab="commands" onclick="switchTab('commands')">Área de Comandos</button>
             <button class="nav-btn" data-tab="downloads" onclick="switchTab('downloads')">Downloads</button>
@@ -730,6 +781,7 @@
                             <div class="key modifier" id="AltLeft">Alt</div>
                             <div class="key space" id="Space">Espaço</div>
                             <div class="key modifier" id="AltRight">AltGr</div>
+                            <div class="key modifier" id="MetaRight">Win</div>
                             <div class="key modifier" id="ControlRight">Ctrl R</div>
                             <div class="key" id="ArrowLeft">←</div>
                             <div class="key" id="ArrowUp">↑</div>
@@ -794,11 +846,25 @@
 
             <div class="card">
                 <h2>Áudio (Estéreo)</h2>
-                <div class="card-content">
+                <div class="card-content" style="align-items: stretch; gap: 14px;">
                     <div class="audio-container">
-                        <button class="audio-btn btn-left" onclick="playStereoAudio(-1)">← Esquerdo</button>
-                        <button class="audio-btn btn-right" onclick="playStereoAudio(1)">Direito →</button>
+                        <button class="audio-btn btn-left" onclick="playChannelTest('left')">← Esquerdo</button>
+                        <button class="audio-btn btn-stereo" onclick="playChannelTest('stereo')">Estéreo</button>
+                        <button class="audio-btn btn-right" onclick="playChannelTest('right')">Direito →</button>
                     </div>
+
+                    <div class="volume-row">
+                        <label for="audio-volume">Volume: <span id="volume-value">50%</span></label>
+                        <input type="range" id="audio-volume" min="0" max="100" value="50">
+                    </div>
+
+                    <div class="audio-results">
+                        <div class="audio-result" id="result-left"><span class="dot-status">○</span> Esquerdo — Não testado</div>
+                        <div class="audio-result" id="result-stereo"><span class="dot-status">○</span> Estéreo — Não testado</div>
+                        <div class="audio-result" id="result-right"><span class="dot-status">○</span> Direito — Não testado</div>
+                    </div>
+
+                    <button class="standard-btn stop" onclick="resetAudioResults()">Redefinir Resultados</button>
                 </div>
             </div>
         </div>
@@ -997,7 +1063,7 @@
             stAutoTimer = setInterval(() => {
                 stIndex = (stIndex + 1) % stColors.length;
                 document.getElementById('screen-test-overlay').style.background = stColors[stIndex].cor;
-            }, 2500);
+            }, 1500);
         }
 
         function stStopAuto() {
@@ -1020,6 +1086,13 @@
     </script>
 
     <script>
+        // --- ÍCONES SVG DAS TECLAS ESPECIAIS ---
+        const KEY_ICONS = {
+            win: `<svg viewBox="0 0 20 20" fill="currentColor"><rect x="0" y="0" width="9" height="9"/><rect x="11" y="0" width="9" height="9"/><rect x="0" y="11" width="9" height="9"/><rect x="11" y="11" width="9" height="9"/></svg>`,
+            cmd: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3"/></svg>`,
+            option: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h6l10 12h4"/></svg>`
+        };
+
         // --- DETECÇÃO DE SISTEMA OPERACIONAL ---
         function detectarSO() {
             const ua = navigator.userAgent;
@@ -1031,26 +1104,33 @@
 
         function ajustarLayoutTeclado() {
             const so = detectarSO();
-            if (so !== 'MAC') return; // layout padrão (Windows) já é o do HTML
+            const metaLeft = document.getElementById('MetaLeft');
+            const altLeft = document.getElementById('AltLeft');
+            const ctrlLeft = document.getElementById('ControlLeft');
+            const altRight = document.getElementById('AltRight');
+            const metaRight = document.getElementById('MetaRight');
+            const ctrlRight = document.getElementById('ControlRight');
 
-            // No Mac: Ctrl vira Control, Win/Cmd vira Command, Alt vira Option
-            const rotulos = {
-                ControlLeft: 'Control',
-                MetaLeft: 'Command',
-                AltLeft: 'Option',
-                AltRight: 'Option R',
-                ControlRight: 'Control R'
-            };
-            Object.entries(rotulos).forEach(([id, texto]) => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = texto;
-            });
+            if (so === 'MAC') {
+                // Lado esquerdo: Control, Option, Command (ícones)
+                if (ctrlLeft) ctrlLeft.textContent = 'Control';
+                if (altLeft) altLeft.innerHTML = KEY_ICONS.option;
+                if (metaLeft) metaLeft.innerHTML = KEY_ICONS.cmd;
+                if (metaLeft && altLeft && metaLeft.parentElement) {
+                    metaLeft.parentElement.insertBefore(altLeft, metaLeft);
+                }
 
-            // Ordem física do Mac é diferente: Control, Option, Command (da esquerda pra direita)
-            const metaKey = document.getElementById('MetaLeft');
-            const altKey = document.getElementById('AltLeft');
-            if (metaKey && altKey && metaKey.parentElement) {
-                metaKey.parentElement.insertBefore(altKey, metaKey);
+                // Lado direito no Mac: só existem Command R e Option R (sem Control R)
+                if (metaRight) metaRight.innerHTML = KEY_ICONS.cmd;
+                if (altRight) altRight.innerHTML = KEY_ICONS.option;
+                if (metaRight && altRight && metaRight.parentElement) {
+                    metaRight.parentElement.insertBefore(metaRight, altRight);
+                }
+                if (ctrlRight) ctrlRight.style.display = 'none';
+            } else {
+                // Windows (padrão): troca "Win" pelo logo vetorial nas duas teclas Win
+                if (metaLeft) metaLeft.innerHTML = KEY_ICONS.win;
+                if (metaRight) metaRight.innerHTML = KEY_ICONS.win;
             }
         }
 
@@ -1211,20 +1291,122 @@
             }
         }
 
-        function playStereoAudio(panValue) {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            if (!ctx) return;
-            const osc = ctx.createOscillator(); const gain = ctx.createGain();
-            const panner = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
-            osc.frequency.setValueAtTime(440, ctx.currentTime);
-            gain.gain.setValueAtTime(0.4, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
-            if (panner) {
-                panner.pan.setValueAtTime(panValue, ctx.currentTime);
-                osc.connect(gain).connect(panner).connect(ctx.destination);
-            } else { osc.connect(gain).connect(ctx.destination); }
-            osc.start(); osc.stop(ctx.currentTime + 0.6);
+        // --- TESTE DE ÁUDIO (varrimento de frequência 20Hz-20kHz, em loop) ---
+        let audioTested = { left: false, stereo: false, right: false };
+        let audioCtx = null, audioOsc = null, audioGain = null, audioPanner = null;
+        let audioLoopTimer = null, audioActiveChannel = null;
+        const SWEEP_DURATION = 3; // segundos por ciclo do varrimento
+
+        function getVolumeAtual() {
+            const el = document.getElementById('audio-volume');
+            return el ? el.value / 100 : 0.5;
         }
+
+        function playChannelTest(channel) {
+            // Clicou de novo no mesmo canal que já está tocando -> para
+            if (audioActiveChannel === channel) {
+                stopAudioTest();
+                return;
+            }
+            // Troca de canal: para o anterior e começa o novo
+            stopAudioTest();
+
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            audioOsc = audioCtx.createOscillator();
+            audioGain = audioCtx.createGain();
+            audioPanner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+
+            let panValue = 0;
+            if (channel === 'left') panValue = -1;
+            if (channel === 'right') panValue = 1;
+
+            if (audioPanner) {
+                audioPanner.pan.setValueAtTime(panValue, audioCtx.currentTime);
+                audioOsc.connect(audioGain).connect(audioPanner).connect(audioCtx.destination);
+            } else {
+                audioOsc.connect(audioGain).connect(audioCtx.destination);
+            }
+
+            const pico = Math.max(getVolumeAtual() * 0.5, 0.0001);
+            audioGain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+            audioGain.gain.exponentialRampToValueAtTime(pico, audioCtx.currentTime + 0.08);
+
+            audioOsc.start();
+            audioActiveChannel = channel;
+            markAudioTested(channel);
+            setPlayingButtonUI(channel);
+            runSweepCycle();
+        }
+
+        function runSweepCycle() {
+            if (!audioCtx || !audioOsc) return;
+            const now = audioCtx.currentTime;
+            audioOsc.frequency.cancelScheduledValues(now);
+            audioOsc.frequency.setValueAtTime(20, now);
+            audioOsc.frequency.exponentialRampToValueAtTime(20000, now + SWEEP_DURATION);
+            audioLoopTimer = setTimeout(runSweepCycle, SWEEP_DURATION * 1000);
+        }
+
+        function stopAudioTest() {
+            if (audioLoopTimer) { clearTimeout(audioLoopTimer); audioLoopTimer = null; }
+            if (audioGain && audioCtx) {
+                try {
+                    audioGain.gain.cancelScheduledValues(audioCtx.currentTime);
+                    audioGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05);
+                } catch (e) {}
+            }
+            const ctxToClose = audioCtx, oscToStop = audioOsc;
+            setTimeout(() => {
+                try { if (oscToStop) oscToStop.stop(); } catch (e) {}
+                if (ctxToClose) ctxToClose.close().catch(() => {});
+            }, 70);
+            audioCtx = null; audioOsc = null; audioGain = null; audioPanner = null;
+            audioActiveChannel = null;
+            setPlayingButtonUI(null);
+        }
+
+        function setPlayingButtonUI(channel) {
+            document.querySelectorAll('.audio-btn').forEach(b => b.classList.remove('playing'));
+            if (!channel) return;
+            const map = { left: '.btn-left', stereo: '.btn-stereo', right: '.btn-right' };
+            const btn = document.querySelector(map[channel]);
+            if (btn) btn.classList.add('playing');
+        }
+
+        function markAudioTested(channel) {
+            audioTested[channel] = true;
+            updateAudioResultsUI();
+        }
+
+        function updateAudioResultsUI() {
+            const labels = { left: 'Esquerdo', stereo: 'Estéreo', right: 'Direito' };
+            Object.keys(labels).forEach(ch => {
+                const el = document.getElementById('result-' + ch);
+                if (!el) return;
+                if (audioTested[ch]) {
+                    el.innerHTML = `<span class="dot-status">✓</span> ${labels[ch]} — Testado`;
+                    el.classList.add('done');
+                } else {
+                    el.innerHTML = `<span class="dot-status">○</span> ${labels[ch]} — Não testado`;
+                    el.classList.remove('done');
+                }
+            });
+        }
+
+        function resetAudioResults() {
+            audioTested = { left: false, stereo: false, right: false };
+            updateAudioResultsUI();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const volSlider = document.getElementById('audio-volume');
+            const volLabel = document.getElementById('volume-value');
+            if (volSlider && volLabel) {
+                volSlider.addEventListener('input', () => {
+                    volLabel.textContent = volSlider.value + '%';
+                });
+            }
+        });
     </script>
 </body>
 </html>
