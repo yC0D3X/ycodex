@@ -36,18 +36,17 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            background-image:
-                linear-gradient(to right, rgba(255,255,255,0.035) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255,255,255,0.035) 1px, transparent 1px);
-            background-size: 48px 48px;
-            background-position: center top;
         }
-        body::before {
-            content: "";
-            position: fixed; inset: 0;
-            background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.06), transparent 60%);
-            pointer-events: none;
+        #ascii-bg {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
             z-index: 0;
+            pointer-events: none;
+            display: block;
+            opacity: 0;
+            transition: opacity 0.6s ease;
         }
         h1 {
             font-family: 'Archivo Black', sans-serif;
@@ -69,7 +68,7 @@
         }
 
         .card {
-            background: linear-gradient(180deg, #0c0c0c 0%, #060606 100%);
+            background: linear-gradient(180deg, rgba(12,12,12,0.88) 0%, rgba(6,6,6,0.88) 100%);
             border-radius: 14px;
             padding: 20px;
             box-shadow: 0 20px 40px -20px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.03);
@@ -406,39 +405,141 @@
         }
 
         /* Tabs */
-        .tabs {
-            display: flex;
-            align-items: center;
-            gap: 2rem;
-        }
         .brand-logo {
             cursor: pointer;
         }
-        .nav-btn {
-            background: transparent;
-            border: none;
-            padding: 0;
-            color: #606060;
-            text-decoration: none;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
+
+        /* Dock em vidro escuro (glass) */
+        .dock {
+            --s: 44px;
+            --g: 8px;
+            --ease: cubic-bezier(0.22, 1, 0.36, 1);
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.10);
+            background:
+                linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 45%, rgba(255,255,255,0.05) 100%),
+                rgba(14,14,14,0.45);
+            -webkit-backdrop-filter: blur(16px) saturate(140%);
+            backdrop-filter: blur(16px) saturate(140%);
+            box-shadow:
+                0 12px 32px -12px rgba(0,0,0,0.8),
+                inset 0 1px 0 rgba(255,255,255,0.14),
+                inset 0 -1px 0 rgba(0,0,0,0.45);
             position: relative;
-            transition: color 0.25s;
+            z-index: 5;
         }
-        .nav-btn::after {
-            content: '';
+        .dock-items {
+            display: flex;
+            align-items: center;
+            gap: var(--g);
+            padding: 10px;
+            margin: -10px;
+            width: 20px;
+            overflow: hidden;
+            pointer-events: none;
+            will-change: width;
+            transition: width 0.6s var(--ease), padding 0.6s var(--ease);
+        }
+        .dock.open .dock-items {
+            width: calc(var(--s) * 4 + var(--g) * 4 + 20px);
+            padding-right: calc(10px + var(--g));
+            pointer-events: auto;
+        }
+
+        .nav-btn, .dock-toggle {
+            width: var(--s);
+            height: var(--s);
+            flex: none;
+            padding: 0;
+            border: none;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.04);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+            color: #8f8f8f;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            transition:
+                background 0.25s ease,
+                box-shadow 0.3s ease,
+                color 0.25s ease,
+                opacity 0.45s var(--ease) var(--dly-o, 0s),
+                transform 0.6s var(--ease) var(--dly-o, 0s);
+        }
+        .nav-btn { will-change: transform, opacity; }
+        .brand { contain: layout style; }
+        .nav-btn svg { width: 18px; height: 18px; display: block; }
+        .nav-btn span { font-size: 8px; font-weight: 600; letter-spacing: 0.01em; line-height: 1; }
+
+        .nav-btn {
+            opacity: 0;
+            transform: translateX(calc((var(--s) + var(--g)) * var(--i, 1))) scale(0.5);
+            --dly-o: var(--dc, 0s);
+        }
+        .dock.open .nav-btn {
+            opacity: 1;
+            transform: none;
+            --dly-o: var(--do, 0s);
+        }
+        .nav-btn:nth-last-child(1) { --i: 1; --dc: 0.06s; --do: 0.04s; }
+        .nav-btn:nth-last-child(2) { --i: 2; --dc: 0.04s; --do: 0.08s; }
+        .nav-btn:nth-last-child(3) { --i: 3; --dc: 0.02s; --do: 0.12s; }
+        .nav-btn:nth-last-child(4) { --i: 4; --dc: 0s;    --do: 0.16s; }
+
+        @media (hover: hover) {
+            .nav-btn:hover, .dock-toggle:hover {
+                background: rgba(255,255,255,0.10);
+                color: #fff;
+            }
+        }
+        .nav-btn.active {
+            background: rgba(255,255,255,0.14);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.16), inset 0 1px 0 rgba(255,255,255,0.18);
+            color: #fff;
+        }
+        .nav-btn:active, .dock-toggle:active { background: rgba(255,255,255,0.18); }
+        .nav-btn:focus-visible, .dock-toggle:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+        .dock-toggle { color: #fff; }
+        .dock.open .dock-toggle { background: rgba(255,255,255,0.12); }
+        .dock-icon { position: relative; width: 16px; height: 12px; display: block; }
+        .dock-icon i {
             position: absolute;
-            bottom: -4px;
             left: 0;
-            width: 0;
-            height: 1px;
-            background: #ffffff;
-            transition: width 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            width: 100%;
+            height: 2px;
+            border-radius: 2px;
+            background: #fff;
+            transition: transform 0.5s var(--ease), opacity 0.25s, top 0.5s var(--ease);
         }
-        .nav-btn:hover { color: #f0f0f0; }
-        .nav-btn:hover::after { width: 100%; }
+        .dock-icon i:nth-child(1) { top: 0; }
+        .dock-icon i:nth-child(2) { top: 5px; }
+        .dock-icon i:nth-child(3) { top: 10px; }
+        .dock.open .dock-icon i:nth-child(1) { top: 5px; transform: rotate(45deg); }
+        .dock.open .dock-icon i:nth-child(2) { opacity: 0; }
+        .dock.open .dock-icon i:nth-child(3) { top: 5px; transform: rotate(-45deg); }
+
+        @supports (corner-shape: superellipse(2)) {
+            .dock { border-radius: 24px; corner-shape: superellipse(2); }
+            .nav-btn, .dock-toggle { border-radius: 18px; corner-shape: superellipse(2); }
+        }
+
+        /* Celular: dock menor e sobreposto ao logo ao abrir */
+        @media (max-width: 560px) {
+            .brand { min-height: 56px; }
+            .dock { --s: 40px; position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .dock-items, .nav-btn, .dock-toggle, .dock-icon i { transition: none; }
+        }
 
         /* Teste de Tela */
         .st-grid {
@@ -677,13 +778,32 @@
     </style>
 </head>
 <body>
+    <canvas id="ascii-bg" aria-hidden="true"></canvas>
 
     <div class="brand">
         <div class="brand-logo" onclick="switchTab('tester')">ycodex</div>
-        <div class="tabs">
-            <button class="nav-btn" data-tab="commands" onclick="switchTab('commands')">Área de Comandos</button>
-            <button class="nav-btn" data-tab="downloads" onclick="switchTab('downloads')">Downloads</button>
-            <button class="nav-btn" data-tab="screentest" onclick="switchTab('screentest')">Tela</button>
+        <div class="dock" id="dock">
+            <div class="dock-items" id="dock-items">
+                <button class="nav-btn active" data-tab="tester" title="Testes" aria-label="Testes" onclick="switchTab('tester')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>
+                    <span>Testes</span>
+                </button>
+                <button class="nav-btn" data-tab="commands" title="Área de Comandos" aria-label="Área de Comandos" onclick="switchTab('commands')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                    <span>Comandos</span>
+                </button>
+                <button class="nav-btn" data-tab="downloads" title="Downloads" aria-label="Downloads" onclick="switchTab('downloads')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span>Downloads</span>
+                </button>
+                <button class="nav-btn" data-tab="screentest" title="Tela" aria-label="Tela" onclick="switchTab('screentest')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    <span>Tela</span>
+                </button>
+            </div>
+            <button class="dock-toggle" id="dock-toggle" aria-expanded="false" aria-controls="dock-items" aria-label="Abrir menu" onclick="toggleDock()">
+                <span class="dock-icon"><i></i><i></i><i></i></span>
+            </button>
         </div>
     </div>
 
@@ -1144,10 +1264,28 @@
         document.addEventListener('DOMContentLoaded', ajustarLayoutTeclado);
 
         // --- TABS ---
-        function switchTab(name) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
-            document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
+        function toggleDock(force) {
+            const dock = document.getElementById('dock');
+            const toggle = document.getElementById('dock-toggle');
+            const open = typeof force === 'boolean' ? force : !dock.classList.contains('open');
+            dock.classList.toggle('open', open);
+            toggle.setAttribute('aria-expanded', open);
+            toggle.setAttribute('aria-label', open ? 'Fechar menu' : 'Abrir menu');
         }
+
+        function switchTab(name) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
+            toggleDock(false);
+        }
+
+        document.addEventListener('click', (e) => {
+            const dock = document.getElementById('dock');
+            if (dock && !dock.contains(e.target)) toggleDock(false);
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') toggleDock(false);
+        });
 
         // --- COPY TO CLIPBOARD (mac / windows / fallback) ---
         async function copyText(text) {
@@ -1210,6 +1348,7 @@
         }
 
         window.addEventListener('keydown', function(e) {
+            if (e.target.closest && e.target.closest('.dock')) return;
             e.preventDefault();
             updateLog(e.key, e.code);
             const keyElement = handleDynamicKey(e);
@@ -1220,6 +1359,7 @@
         });
 
         window.addEventListener('keyup', function(e) {
+            if (e.target.closest && e.target.closest('.dock')) return;
             e.preventDefault();
             const keyElement = document.getElementById(e.code);
             if (keyElement) {
@@ -1415,5 +1555,178 @@
             }
         });
     </script>
+    <script id="noise-src" type="text/plain">
+// --- Motor do fundo ASCII noise (roda num Worker, fora da thread principal) ---
+var RAMP = ' .:-=+*#%@';   // caracteres, do mais apagado ao mais forte
+var SIZE = 20;             // tamanho FIXO do caractere (px): 11 = bem fino | 14 = padrão | 18 = grande | 22 = enorme
+var AUTO_ADJUST = false;   // false = tamanho sempre fixo | true = aumenta sozinho se o PC ficar lento
+var SCALE = 0.10;          // escala do ruído (menor = manchas maiores)
+var SPEED = 0.8;           // velocidade da animação
+var FPS = 24;              // quadros por segundo
+var GRAY_MIN = 45, GRAY_MAX = 200; // cinza mais escuro e mais claro (0-255)
+
+var n = RAMP.length - 1;
+var cv, ctx, W = 0, H = 0, dpr = 1, tw, th, cols, rows, atlas, grid;
+var mx = -1, my = -1, paused = false, reduce = false, ema = 0, frames = 0, ready = false;
+
+function makeCanvas(w, h) {
+    if (typeof OffscreenCanvas !== 'undefined') return new OffscreenCanvas(w, h);
+    var c = document.createElement('canvas'); c.width = w; c.height = h; return c;
+}
+function hash(x, y, z) {
+    var h = Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(z, 1274126177);
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+}
+function sm(t) { return t * t * (3 - 2 * t); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function noise(x, y, z) {
+    var xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+    var xf = sm(x - xi), yf = sm(y - yi), zf = sm(z - zi);
+    return lerp(
+        lerp(lerp(hash(xi, yi, zi), hash(xi + 1, yi, zi), xf), lerp(hash(xi, yi + 1, zi), hash(xi + 1, yi + 1, zi), xf), yf),
+        lerp(lerp(hash(xi, yi, zi + 1), hash(xi + 1, yi, zi + 1), xf), lerp(hash(xi, yi + 1, zi + 1), hash(xi + 1, yi + 1, zi + 1), xf), yf),
+        zf
+    );
+}
+function fbm(x, y, z) {
+    return noise(x, y, z) * 0.6 + noise(x * 2, y * 2, z * 1.5) * 0.28 + noise(x * 4, y * 4, z * 2) * 0.12;
+}
+
+function buildAtlas() {
+    atlas = makeCanvas(tw * (n + 1), th);
+    var a = atlas.getContext('2d');
+    a.font = Math.round(th * 0.95) + 'px ui-monospace, Menlo, Consolas, monospace';
+    a.textBaseline = 'top';
+    for (var k = 1; k <= n; k++) {
+        var g = Math.round(GRAY_MIN + (GRAY_MAX - GRAY_MIN) * (k / n));
+        a.fillStyle = 'rgb(' + g + ',' + g + ',' + g + ')';
+        a.fillText(RAMP.charAt(k), k * tw, 0);
+    }
+}
+function resize() {
+    cv.width = Math.round(W * dpr);
+    cv.height = Math.round(H * dpr);
+    th = Math.round(SIZE * dpr);
+    tw = Math.round(SIZE * 0.6 * dpr);
+    cols = Math.ceil(cv.width / tw);
+    rows = Math.ceil(cv.height / th);
+    grid = new Uint8Array(cols * rows);
+    buildAtlas();
+    // mudar width/height apaga o canvas: redesenha na hora para não piscar
+    draw(reduce ? 0 : performance.now());
+    if (!ready) { ready = true; self.postMessage({ type: 'ready' }); }
+}
+function draw(t) {
+    var z = t * 0.001 * SPEED, cssW = tw / dpr, cssH = th / dpr, R = 140, R2 = R * R;
+    var i, j, v, dx, dy, d2, idx = 0;
+    for (j = 0; j < rows; j++) {
+        for (i = 0; i < cols; i++, idx++) {
+            v = fbm(i * SCALE, j * SCALE * 1.7, z);
+            if (mx >= 0) {
+                dx = i * cssW - mx; dy = j * cssH - my;
+                if (dx < R && dx > -R && dy < R && dy > -R) {
+                    d2 = dx * dx + dy * dy;
+                    if (d2 < R2) v = Math.min(1, v + (1 - Math.sqrt(d2) / R) * 0.35);
+                }
+            }
+            v = (v - 0.2) * 1.6;
+            grid[idx] = v <= 0 ? 0 : v >= 1 ? n : Math.round(v * n);
+        }
+    }
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, cv.width, cv.height);
+    idx = 0;
+    for (j = 0; j < rows; j++) {
+        for (i = 0; i < cols; i++, idx++) {
+            var k = grid[idx];
+            if (k) ctx.drawImage(atlas, k * tw, 0, tw, th, i * tw, j * th, tw, th);
+        }
+    }
+}
+function tick() {
+    setTimeout(tick, 1000 / FPS);
+    if (paused || reduce) return;
+    var s = performance.now();
+    draw(s);
+    ema = ema * 0.9 + (performance.now() - s) * 0.1;
+    // se estiver lento, aumenta o caractere sozinho (menos células)
+    if (AUTO_ADJUST && ++frames % 30 === 0 && frames > 60 && ema > 10 && SIZE < 24) { SIZE += 2; resize(); }
+}
+self.onmessage = function (e) {
+    var m = e.data;
+    if (m.type === 'init') {
+        cv = m.canvas; ctx = cv.getContext('2d', { alpha: false });
+        W = m.w; H = m.h; dpr = m.dpr; reduce = m.reduce;
+        resize();
+        if (!reduce) tick();
+    } else if (m.type === 'resize') {
+        if (m.w === W && m.h === H && m.dpr === dpr) return;
+        W = m.w; H = m.h; dpr = m.dpr; resize();
+    } else if (m.type === 'm') {
+        mx = m.x; my = m.y;
+    } else if (m.type === 'pause') {
+        paused = m.v;
+    }
+};
+    </script>
+    <script>
+    // --- FUNDO ASCII NOISE: o cálculo roda num Worker, então não trava a interface ---
+    (function () {
+        var cv = document.getElementById('ascii-bg');
+        var overlay = document.getElementById('screen-test-overlay');
+        var src = document.getElementById('noise-src').textContent;
+        var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var send = null, worker = null;
+        function onReady() { cv.style.opacity = '1'; }
+        setTimeout(onReady, 1500); // segurança: nunca deixa o fundo invisível
+
+        function dims() {
+            return { w: window.innerWidth, h: window.innerHeight, dpr: Math.min(window.devicePixelRatio || 1, 2) };
+        }
+
+        var d = dims();
+        // 1) tenta Worker + OffscreenCanvas (fora da thread principal)
+        if (window.Worker && window.OffscreenCanvas && cv.transferControlToOffscreen) {
+            try {
+                worker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+                worker.onmessage = function (e) { if (e.data && e.data.type === 'ready') onReady(); };
+                var off = cv.transferControlToOffscreen();
+                worker.postMessage({ type: 'init', canvas: off, w: d.w, h: d.h, dpr: d.dpr, reduce: reduce }, [off]);
+                send = function (m) { worker.postMessage(m); };
+            } catch (err) { worker = null; send = null; }
+        }
+        // 2) plano B: roda o mesmo motor na thread principal
+        if (!send && !cv.__transferred) {
+            var fake = { onmessage: null, postMessage: function (m) { if (m && m.type === 'ready') onReady(); } };
+            new Function('self', src)(fake);
+            send = function (m) { fake.onmessage({ data: m }); };
+            send({ type: 'init', canvas: cv, w: d.w, h: d.h, dpr: d.dpr, reduce: reduce });
+        }
+
+        function syncPause() {
+            send({ type: 'pause', v: document.hidden || (overlay && overlay.style.display === 'flex') });
+        }
+        document.addEventListener('visibilitychange', syncPause);
+        if (overlay && window.MutationObserver) {
+            new MutationObserver(syncPause).observe(overlay, { attributes: true, attributeFilter: ['style'] });
+        }
+
+        window.addEventListener('resize', function () {
+            var n = dims();
+            send({ type: 'resize', w: n.w, h: n.h, dpr: n.dpr });
+        });
+
+        // posição do mouse enviada no máximo uma vez por quadro
+        var mxx = -1, myy = -1, queued = false;
+        function flushMouse() { queued = false; send({ type: 'm', x: mxx, y: myy }); }
+        window.addEventListener('pointermove', function (e) {
+            mxx = e.clientX; myy = e.clientY;
+            if (!queued) { queued = true; requestAnimationFrame(flushMouse); }
+        }, { passive: true });
+        window.addEventListener('pointerleave', function () { mxx = myy = -1; send({ type: 'm', x: -1, y: -1 }); });
+    })();
+    </script>
+
 </body>
 </html>
