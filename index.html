@@ -390,11 +390,67 @@
             position: relative;
             z-index: 1;
         }
+        /* Logo no mesmo layout do botão de menu: caixa externa (igual ao .dock) + caixa interna (igual ao .dock-toggle) */
         .brand-logo {
-            font-family: 'Archivo Black', sans-serif;
-            font-size: 1.4rem;
-            letter-spacing: 0.18em;
+            display: inline-flex;
+            padding: 5px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.10);
+            background:
+                linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 45%, rgba(255,255,255,0.05) 100%),
+                rgba(14,14,14,0.45);
+            -webkit-backdrop-filter: blur(16px) saturate(140%);
+            backdrop-filter: blur(16px) saturate(140%);
+            box-shadow:
+                0 12px 32px -12px rgba(0,0,0,0.8),
+                inset 0 1px 0 rgba(255,255,255,0.14),
+                inset 0 -1px 0 rgba(0,0,0,0.45);
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .brand-logo-btn {
+            display: flex;
+            align-items: center;
+            height: 44px;            /* mesma altura do botão de menu */
+            padding: 0 16px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.04);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+            overflow: hidden;        /* o brilho fica dentro da caixa */
+            transition: background 0.25s ease;
+        }
+        @media (hover: hover) {
+            .brand-logo:hover .brand-logo-btn { background: rgba(255,255,255,0.10); }
+        }
+        .brand-logo:active .brand-logo-btn { background: rgba(255,255,255,0.18); }
+        @supports (corner-shape: superellipse(2)) {
+            .brand-logo { border-radius: 24px; corner-shape: superellipse(2); }
+            .brand-logo-btn { border-radius: 18px; corner-shape: superellipse(2); }
+        }
+        .brand-logo-text {
+            --logo-sy: 0.72;         /* achatar na vertical (1 = normal) */
+            display: block;
+            font-family: 'Archivo Black', sans-serif;  /* mesma fonte dos títulos dos cards */
+            font-size: 1.9rem;       /* fonte maior = texto mais largo; o achatamento compensa a altura */
+            line-height: 1;
+            letter-spacing: 0.1em;
+            margin-right: -0.1em;    /* compensa o espaço sobrando depois da última letra */
+            text-transform: uppercase;
             color: #fff;
+            transform: scaleY(var(--logo-sy));
+            /* borda preta: o contorno é pintado por baixo do branco, então fica só do lado de fora da letra */
+            -webkit-text-stroke: 4px #000;
+            paint-order: stroke fill;
+            /* brilho branco pulsante atrás do texto */
+            animation: logoGlow 3s ease-in-out infinite;
+        }
+        @keyframes logoGlow {
+            0%, 100% { text-shadow: 0 0 8px rgba(255,255,255,0.45), 0 0 22px rgba(255,255,255,0.22); }
+            50%      { text-shadow: 0 0 12px rgba(255,255,255,0.85), 0 0 32px rgba(255,255,255,0.5), 0 0 56px rgba(255,255,255,0.25); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .brand-logo-text { animation: none; text-shadow: 0 0 10px rgba(255,255,255,0.6), 0 0 28px rgba(255,255,255,0.3); }
         }
         .brand-tag {
             font-family: 'Inter', sans-serif;
@@ -775,13 +831,300 @@
             .cmd-row { flex-wrap: wrap; }
             .cmd-code { flex-basis: 100%; order: 3; }
         }
+
+        /* Zoom do conteúdo (controlado pela lupa) */
+        .brand, .container { zoom: var(--ui-zoom, 0.6); }
+        .zoom-lens {
+            position: fixed;
+            right: 16px;
+            bottom: 16px;
+            z-index: 50;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.28);
+            background:
+                linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.08) 100%),
+                rgba(20,20,20,0.85);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            cursor: nesw-resize;
+            opacity: 0.9;
+            box-shadow:
+                0 8px 24px -8px rgba(0,0,0,0.9),
+                0 0 0 4px rgba(255,255,255,0.04),
+                inset 0 1px 0 rgba(255,255,255,0.18);
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: opacity 0.2s ease, transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .zoom-lens:hover, .zoom-lens.dragging {
+            opacity: 1;
+            border-color: rgba(255,255,255,0.5);
+            box-shadow:
+                0 8px 24px -8px rgba(0,0,0,0.9),
+                0 0 0 5px rgba(255,255,255,0.08),
+                inset 0 1px 0 rgba(255,255,255,0.22);
+        }
+        .zoom-lens.dragging { transform: scale(1.1); }
+        .zoom-lens svg { width: 20px; height: 20px; display: block; pointer-events: none; }
+        .zoom-label {
+            position: fixed;
+            right: 70px;
+            bottom: 27px;
+            z-index: 50;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text);
+            background: rgba(20,20,20,0.92);
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            padding: 3px 7px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .zoom-label.show { opacity: 1; }
+
+        /* Teste de touchpad */
+        .tp-desc {
+            margin: 0;
+            text-align: left;
+            color: var(--muted);
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+        #tp-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: #000;
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        #tp-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+        .tp-hud {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px 20px;
+            width: max-content;
+            max-width: calc(100% - 32px);
+            padding: 8px 16px;
+            border-radius: 999px;
+            background: rgba(20,20,20,0.85);
+            border: 1px solid var(--border-strong);
+            color: var(--muted);
+            font-size: 0.78rem;
+            pointer-events: none;
+        }
+        .tp-hud strong { color: var(--text); }
+        .tp-hud em { font-style: normal; color: var(--text); opacity: 0.7; }
+        .tp-gestures b {
+            display: inline-block;
+            min-width: 18px;
+            margin-left: 3px;
+            text-align: center;
+            border-radius: 4px;
+            color: var(--dim);
+            border: 1px solid var(--border-strong);
+            transition: background 0.2s, color 0.2s;
+        }
+        .tp-gestures b.on { background: #fff; color: #000; border-color: #fff; }
+        .tp-panel {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: min(420px, calc(100% - 32px));
+            padding: 22px;
+            border-radius: 14px;
+            background: rgba(12,12,12,0.95);
+            border: 1px solid var(--border-strong);
+            box-shadow: 0 20px 60px -10px rgba(0,0,0,0.9);
+            text-align: left;
+        }
+        .tp-panel h3 {
+            font-family: 'Archivo Black', sans-serif;
+            margin: 0 0 10px;
+            font-size: 1rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--text);
+        }
+        .tp-panel p { margin: 0 0 6px; color: var(--muted); font-size: 0.85rem; line-height: 1.5; }
+        .tp-panel-btns { display: flex; gap: 8px; }
+        .tp-panel-btns .standard-btn { flex: 1; padding: 10px 8px; font-size: 0.78rem; }
+        #tp-overlay.locked .tp-panel { display: none; }
+        #tp-overlay.locked { cursor: none; }
+        /* Pré-loader (coelho + logo, igual ao coelho_gradiente.bat) */
+        #preloader {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            animation: plOut 0.45s ease 2.35s forwards;
+        }
+        .pl-wrap { display: flex; align-items: center; gap: 3vw; }
+        .pl-wrap pre {
+            margin: 0;
+            font-family: ui-monospace, Menlo, Consolas, 'Courier New', monospace;
+            line-height: 1;
+            white-space: pre;
+        }
+        .pl-bunny {
+            font-size: min(1.25vh, 0.95vw);
+            /* gradiente diagonal: rosa (255,110,180) no canto inferior esquerdo -> branco no superior direito */
+            background: linear-gradient(to top right, rgb(255,110,180), #ffffff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            opacity: 0;
+            animation: plIn 0.4s ease 0.1s forwards;
+        }
+        .pl-logo {
+            font-size: min(2.2vh, 1.3vw);
+            color: #fff;
+            clip-path: inset(0 100% 0 0);
+            animation: plType 0.5s steps(12, end) 1.25s forwards;
+        }
+        /* cursor de terminal piscando no fim do logo */
+        .pl-logo-box { position: relative; }
+        .pl-logo-box::after {
+            content: '';
+            position: absolute;
+            right: -1.2em;
+            bottom: 0;
+            width: 0.9em;
+            height: 1.2em;
+            font-size: min(2.2vh, 1.3vw);
+            background: #fff;
+            opacity: 0;
+            animation: plCaret 0.9s steps(1) 1.75s 1 forwards;
+        }
+        @keyframes plIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: none; } }
+        @keyframes plType { to { clip-path: inset(0 0 0 0); } }
+        @keyframes plCaret { 0% { opacity: 1; } 33% { opacity: 0; } 66% { opacity: 1; } 100% { opacity: 0; } }
+        @keyframes plOut { to { opacity: 0; visibility: hidden; } }
+        @media (max-width: 700px) and (orientation: portrait) {
+            .pl-wrap { flex-direction: column; gap: 6vh; }
+            .pl-bunny { font-size: 1.9vw; }
+            .pl-logo, .pl-logo-box::after { font-size: 2.6vw; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            #preloader { animation-delay: 0.9s; }
+            .pl-bunny { animation: none; opacity: 1; }
+            .pl-logo { animation: none; clip-path: none; }
+            .pl-logo-box::after { display: none; }
+        }
+        /* conteúdo entra suave depois do loader */
+        .brand, .container { transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
+        body.pl-loading .brand, body.pl-loading .container { opacity: 0; transform: translateY(14px); }
     </style>
 </head>
-<body>
+<body class="pl-loading">
+    <div id="preloader" aria-hidden="true">
+        <div class="pl-wrap">
+<pre class="pl-bunny">                                              ################
+                    ################      ######################
+              ####################      ########<span id="pl-eye-top">      </span>##############
+            ##############            ##########<span id="pl-eye-bot">      </span>##############
+          ########                  ##################################
+          ##            ##############################################
+                ######################################################
+            ##########################################################
+          ##########################################################
+        ##########################  ################################
+        ########################    ##############################
+        ####################        ##############################
+        ##################        ##############################
+          ############            ############################
+                                ############################
+                              ############################
+                            ##############################
+                          ##################################
+                        ####################################
+                    ########################################
+                  ############################################
+                ##############################################
+              ################################################
+              ################################################
+            ####################################################
+            ####################################################
+          ######################################################
+          ######################################################
+            ######################################################
+                ##################################################
+    ########      ################################################
+  ##############    ##############################################
+################    ##################################    ########
+################    ##################################    ######
+################    ##################################    ####
+################    ################################
+  ############    ##################################
+    ########      ################################
+                ################################
+                ################################
+                  ########################################
+                    ########################################
+                          ##############################</pre>
+            <div class="pl-logo-box"><pre class="pl-logo">██╗   ██╗ ██████╗ ██████╗ ██████╗ ███████╗██╗  ██╗
+╚██╗ ██╔╝██╔════╝██╔═══██╗██╔══██╗██╔════╝╚██╗██╔╝
+ ╚████╔╝ ██║     ██║   ██║██║  ██║█████╗   ╚███╔╝
+  ╚██╔╝  ██║     ██║   ██║██║  ██║██╔══╝   ██╔██╗
+   ██║   ╚██████╗╚██████╔╝██████╔╝███████╗██╔╝ ██╗
+   ╚═╝    ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝</pre></div>
+        </div>
+    </div>
+    <script>
+    // --- PRÉ-LOADER: some sozinho em ~2,8s (clique para pular) ---
+    (function () {
+        var pl = document.getElementById('preloader');
+        var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var done = false;
+        function finish() {
+            if (done) return;
+            done = true;
+            document.body.classList.remove('pl-loading');
+            pl.style.transition = 'opacity 0.3s ease';
+            pl.style.opacity = '0';
+            setTimeout(function () { pl.remove(); }, 350);
+        }
+        // piscar do olho: pálpebra desce (linha de cima), fecha (as duas linhas) e abre de novo
+        var top = document.getElementById('pl-eye-top'), bot = document.getElementById('pl-eye-bot');
+        var OPEN = '      ', SHUT = '######';
+        function eye(t, b) { top.textContent = t; bot.textContent = b; }
+        function blink(at) {
+            setTimeout(function () { eye(SHUT, OPEN); }, at);        // meio fechado
+            setTimeout(function () { eye(SHUT, SHUT); }, at + 50);   // fechado
+            setTimeout(function () { eye(SHUT, OPEN); }, at + 140);  // abrindo
+            setTimeout(function () { eye(OPEN, OPEN); }, at + 190);  // aberto
+        }
+        if (!reduce) { blink(650); blink(950); blink(2000); }        // piscada dupla + uma depois do logo
+        setTimeout(finish, reduce ? 1000 : 2450);
+        pl.addEventListener('mousedown', function (e) { e.stopPropagation(); finish(); });
+        pl.addEventListener('mouseup', function (e) { e.stopPropagation(); });
+    })();
+    </script>
     <canvas id="ascii-bg" aria-hidden="true"></canvas>
 
     <div class="brand">
-        <div class="brand-logo" onclick="switchTab('tester')">ycodex</div>
+        <div class="brand-logo" onclick="switchTab('tester')"><span class="brand-logo-btn"><span class="brand-logo-text">ycodex</span></span></div>
         <div class="dock" id="dock">
             <div class="dock-items" id="dock-items">
                 <button class="nav-btn active" data-tab="tester" title="Testes" aria-label="Testes" onclick="switchTab('tester')">
@@ -987,6 +1330,19 @@
                     <button class="standard-btn stop" onclick="resetAudioResults()">Redefinir Resultados</button>
                 </div>
             </div>
+
+            <div class="card">
+                <h2>Touchpad</h2>
+                <div class="card-content" style="align-items: stretch; gap: 12px;">
+                    <p class="tp-desc">Trava o cursor e desenha o rastro do dedo numa área virtual. Passe o dedo por todo o touchpad até preencher a grade: falhas aparecem como trechos em que o rastro para, engasga ou pula.</p>
+                    <div class="audio-results">
+                        <div class="audio-result" id="tp-card-cov"><span class="dot-status">○</span> Cobertura — Não testado</div>
+                        <div class="audio-result" id="tp-card-scroll"><span class="dot-status">○</span> Rolagem (2 dedos) — Não testado</div>
+                        <div class="audio-result" id="tp-card-pinch"><span class="dot-status">○</span> Pinça (zoom) — Não testado</div>
+                    </div>
+                </div>
+                <button class="standard-btn" onclick="tpOpen()">Iniciar Teste</button>
+            </div>
         </div>
     </div><!-- /tab-tester -->
 
@@ -1131,6 +1487,29 @@
         <div class="st-hint">← → para trocar de cor · clique ou ESC para sair</div>
     </div>
 
+    <div id="tp-overlay">
+        <canvas id="tp-canvas"></canvas>
+        <div class="tp-hud">
+            <span>Cobertura <strong id="tp-cov">0%</strong></span>
+            <span>Sensibilidade <strong id="tp-sens">1.0x</strong> <em>↑ ↓</em></span>
+            <span class="tp-gestures">
+                Rolagem
+                <b id="tp-g-up">↑</b><b id="tp-g-down">↓</b><b id="tp-g-left">←</b><b id="tp-g-right">→</b>
+                · Pinça <b id="tp-g-in">−</b><b id="tp-g-out">+</b>
+            </span>
+            <span><em>R</em> reinicia · <em>ESC</em> pausa</span>
+        </div>
+        <div class="tp-panel" id="tp-panel">
+            <h3 id="tp-panel-title">Teste de Touchpad</h3>
+            <p id="tp-panel-text">O cursor ficará travado. Passe o dedo por toda a superfície do touchpad, em todas as direções, até preencher a grade. Use rolagem com 2 dedos e pinça para testar os gestos.</p>
+            <div class="tp-panel-btns">
+                <button class="standard-btn" id="tp-btn-go" onclick="tpLock()">Começar</button>
+                <button class="standard-btn stop" onclick="tpReset()">Reiniciar</button>
+                <button class="standard-btn stop" onclick="tpClose()">Sair</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- TESTE DE TELA ---
         const stColors = [
@@ -1210,6 +1589,213 @@
         });
 
         stRenderGrid();
+    </script>
+
+    <script>
+        // --- TESTE DE TOUCHPAD ---
+        // O navegador só informa o MOVIMENTO do dedo (relativo), não a posição absoluta no touchpad.
+        // Por isso o cursor fica travado (Pointer Lock) e um cursor virtual "pinta" uma grade:
+        // falhas no touchpad aparecem como rastro que para, engasga ou pula.
+        const TP_COLS = 32, TP_ROWS = 20;   // tamanho da grade a preencher
+        const TP_RATIO = 1.6;               // proporção da área (largura / altura), parecida com um touchpad
+        const TP_GLITCH = 400;              // movimentos maiores que isso num único evento são ignorados (bug conhecido de alguns navegadores)
+        const tpOverlay = document.getElementById('tp-overlay');
+        const tpCanvas = document.getElementById('tp-canvas');
+        const tpCtx = tpCanvas.getContext('2d');
+        let tpTrail = document.createElement('canvas'), tpTrailCtx = tpTrail.getContext('2d');
+        let tpCells = new Uint8Array(TP_COLS * TP_ROWS), tpVisited = 0;
+        let tpSegs = [];                    // rastro em coordenadas normalizadas (0..1), para redesenhar no resize
+        let tpU = 0.5, tpV = 0.5, tpSens = 1, tpOpenFlag = false, tpLocked = false, tpRaf = 0, tpUnlockAt = 0;
+        let tpArea = { x: 0, y: 0, w: 1, h: 1 }, tpDpr = 1;
+        let tpGest = { up: false, down: false, left: false, right: false, in: false, out: false };
+
+        function tpLayout() {
+            tpDpr = Math.min(window.devicePixelRatio || 1, 2);
+            const W = window.innerWidth, H = window.innerHeight;
+            tpCanvas.width = tpTrail.width = Math.round(W * tpDpr);
+            tpCanvas.height = tpTrail.height = Math.round(H * tpDpr);
+            let w = Math.min(W - 48, (H - 140) * TP_RATIO);
+            let h = w / TP_RATIO;
+            tpArea = { x: (W - w) / 2, y: (H - h) / 2 + 24, w: w, h: h };
+            tpRedrawTrail();
+        }
+        function tpToPx(u, v) { return [(tpArea.x + u * tpArea.w) * tpDpr, (tpArea.y + v * tpArea.h) * tpDpr]; }
+        function tpDrawSeg(u0, v0, u1, v1) {
+            const a = tpToPx(u0, v0), b = tpToPx(u1, v1);
+            tpTrailCtx.beginPath();
+            tpTrailCtx.moveTo(a[0], a[1]);
+            tpTrailCtx.lineTo(b[0], b[1]);
+            tpTrailCtx.stroke();
+        }
+        function tpRedrawTrail() {
+            tpTrailCtx.clearRect(0, 0, tpTrail.width, tpTrail.height);
+            tpTrailCtx.strokeStyle = 'rgba(255,255,255,0.85)';
+            tpTrailCtx.lineWidth = 2 * tpDpr;
+            tpTrailCtx.lineCap = 'round';
+            tpTrailCtx.lineJoin = 'round';
+            for (let i = 0; i < tpSegs.length; i += 4) tpDrawSeg(tpSegs[i], tpSegs[i + 1], tpSegs[i + 2], tpSegs[i + 3]);
+        }
+        function tpMark(u, v) {
+            const c = Math.min(TP_COLS - 1, Math.floor(u * TP_COLS)), r = Math.min(TP_ROWS - 1, Math.floor(v * TP_ROWS));
+            const i = r * TP_COLS + c;
+            if (!tpCells[i]) { tpCells[i] = 1; tpVisited++; }
+        }
+        function tpCoverage() { return Math.round(tpVisited / tpCells.length * 100); }
+
+        function tpRender() {
+            tpRaf = requestAnimationFrame(tpRender);
+            const ctx = tpCtx, d = tpDpr, A = tpArea;
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, tpCanvas.width, tpCanvas.height);
+            // células: preenchidas = já passou o dedo
+            const cw = A.w / TP_COLS * d, ch = A.h / TP_ROWS * d, x0 = A.x * d, y0 = A.y * d;
+            ctx.fillStyle = '#0c0c0c';
+            ctx.fillRect(x0, y0, A.w * d, A.h * d);
+            ctx.fillStyle = 'rgba(255,255,255,0.16)';
+            for (let r = 0; r < TP_ROWS; r++)
+                for (let c = 0; c < TP_COLS; c++)
+                    if (tpCells[r * TP_COLS + c]) ctx.fillRect(x0 + c * cw, y0 + r * ch, cw, ch);
+            // linhas da grade
+            ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for (let c = 1; c < TP_COLS; c++) { const x = Math.round(x0 + c * cw) + 0.5; ctx.moveTo(x, y0); ctx.lineTo(x, y0 + A.h * d); }
+            for (let r = 1; r < TP_ROWS; r++) { const y = Math.round(y0 + r * ch) + 0.5; ctx.moveTo(x0, y); ctx.lineTo(x0 + A.w * d, y); }
+            ctx.stroke();
+            // rastro
+            ctx.drawImage(tpTrail, 0, 0);
+            // borda da área
+            ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+            ctx.lineWidth = 1.5 * d;
+            ctx.strokeRect(x0, y0, A.w * d, A.h * d);
+            // cursor virtual
+            const p = tpToPx(tpU, tpV);
+            ctx.beginPath();
+            ctx.arc(p[0], p[1], 7 * d, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(p[0], p[1], 14 * d, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+            ctx.lineWidth = 2 * d;
+            ctx.stroke();
+        }
+
+        function tpUpdateHud() {
+            document.getElementById('tp-cov').textContent = tpCoverage() + '%';
+            document.getElementById('tp-sens').textContent = tpSens.toFixed(1) + 'x';
+            for (const k in tpGest) document.getElementById('tp-g-' + k).classList.toggle('on', tpGest[k]);
+        }
+        // resultado no card, no mesmo padrão do teste de áudio
+        function tpSetResult(id, label, ok) {
+            const el = document.getElementById(id);
+            el.innerHTML = `<span class="dot-status">${ok ? '✓' : '○'}</span> ${label} — ${ok ? 'Testado' : 'Não testado'}`;
+            el.classList.toggle('done', ok);
+        }
+        function tpUpdateCard() {
+            const g = tpGest;
+            tpSetResult('tp-card-cov', 'Cobertura', tpCoverage() === 100);
+            tpSetResult('tp-card-scroll', 'Rolagem (2 dedos)', g.up && g.down && g.left && g.right);
+            tpSetResult('tp-card-pinch', 'Pinça (zoom)', g.in && g.out);
+        }
+        function tpPanel(title, text, btn) {
+            document.getElementById('tp-panel-title').textContent = title;
+            document.getElementById('tp-panel-text').textContent = text;
+            document.getElementById('tp-btn-go').textContent = btn;
+        }
+
+        function tpOpen() {
+            tpOpenFlag = true;
+            tpOverlay.style.display = 'block';
+            tpLayout();
+            tpReset();
+            tpPanel('Teste de Touchpad', 'O cursor ficará travado. Passe o dedo por toda a superfície do touchpad, em todas as direções, até preencher a grade. Use rolagem com 2 dedos e pinça para testar os gestos.', 'Começar');
+            cancelAnimationFrame(tpRaf);
+            tpRender();
+        }
+        function tpClose() {
+            tpOpenFlag = false;
+            if (document.pointerLockElement === tpCanvas) document.exitPointerLock();
+            cancelAnimationFrame(tpRaf);
+            tpOverlay.style.display = 'none';
+            tpOverlay.classList.remove('locked');
+            tpUpdateCard();
+        }
+        function tpReset() {
+            tpCells.fill(0); tpVisited = 0; tpSegs = [];
+            tpU = 0.5; tpV = 0.5;
+            for (const k in tpGest) tpGest[k] = false;
+            tpRedrawTrail();
+            tpUpdateHud();
+        }
+        function tpLock() {
+            try {
+                const p = tpCanvas.requestPointerLock();
+                if (p && p.catch) p.catch(() => tpPanel('Não foi possível travar o cursor', 'O navegador recusou a trava do cursor. Clique de novo em Começar (em alguns navegadores é preciso esperar 1 segundo depois de apertar ESC).', 'Tentar de novo'));
+            } catch (e) {}
+        }
+
+        document.addEventListener('pointerlockchange', () => {
+            const was = tpLocked;
+            tpLocked = document.pointerLockElement === tpCanvas;
+            if (was && !tpLocked) tpUnlockAt = performance.now();
+            tpOverlay.classList.toggle('locked', tpLocked);
+            if (!tpLocked && tpOpenFlag) {
+                const cov = tpCoverage();
+                tpPanel('Pausado — cobertura ' + cov + '%',
+                    cov === 100 ? 'Grade completa! Se o rastro ficou contínuo em toda a área, o rastreamento do touchpad está ok.'
+                                : 'Áreas da grade que continuam vazias, ou trechos em que o rastro parou com o dedo em movimento, indicam possível falha.',
+                    'Continuar');
+            }
+        });
+        document.addEventListener('pointerlockerror', () => {
+            if (tpOpenFlag) tpPanel('Não foi possível travar o cursor', 'O navegador recusou a trava do cursor. Clique de novo em Começar.', 'Tentar de novo');
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!tpLocked) return;
+            let dx = e.movementX || 0, dy = e.movementY || 0;
+            if (Math.abs(dx) > TP_GLITCH || Math.abs(dy) > TP_GLITCH || (!dx && !dy)) return;
+            const u0 = tpU, v0 = tpV;
+            tpU = Math.min(1, Math.max(0, tpU + dx * tpSens / tpArea.w));
+            tpV = Math.min(1, Math.max(0, tpV + dy * tpSens / tpArea.h));
+            // marca todas as células no caminho (movimentos rápidos pulam várias de uma vez)
+            const steps = Math.ceil(Math.max(Math.abs(tpU - u0) * TP_COLS, Math.abs(tpV - v0) * TP_ROWS) * 2) + 1;
+            for (let s = 1; s <= steps; s++) tpMark(u0 + (tpU - u0) * s / steps, v0 + (tpV - v0) * s / steps);
+            tpSegs.push(u0, v0, tpU, tpV);
+            tpDrawSeg(u0, v0, tpU, tpV);
+            tpUpdateHud();
+        });
+
+        // gestos: rolagem com 2 dedos (wheel) e pinça (wheel + ctrl no Chrome/Edge/Firefox, gesture* no Safari)
+        tpOverlay.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            if (e.ctrlKey) { if (e.deltaY < 0) tpGest.out = true; else if (e.deltaY > 0) tpGest.in = true; }
+            else if (Math.abs(e.deltaY) >= Math.abs(e.deltaX)) { if (e.deltaY < 0) tpGest.up = true; else if (e.deltaY > 0) tpGest.down = true; }
+            else { if (e.deltaX < 0) tpGest.left = true; else if (e.deltaX > 0) tpGest.right = true; }
+            tpUpdateHud();
+        }, { passive: false });
+        ['gesturestart', 'gesturechange', 'gestureend'].forEach(t => tpOverlay.addEventListener(t, (e) => {
+            e.preventDefault();
+            if (t === 'gesturechange' && e.scale) { if (e.scale > 1.05) tpGest.out = true; if (e.scale < 0.95) tpGest.in = true; tpUpdateHud(); }
+        }));
+
+        // enquanto o teste está aberto, teclas e cliques não vão para o testador de teclado/mouse
+        window.addEventListener('keydown', (e) => {
+            if (!tpOpenFlag) return;
+            e.stopImmediatePropagation();
+            if (e.key === 'ArrowUp') { tpSens = Math.min(6, tpSens + 0.25); tpUpdateHud(); e.preventDefault(); }
+            else if (e.key === 'ArrowDown') { tpSens = Math.max(0.25, tpSens - 0.25); tpUpdateHud(); e.preventDefault(); }
+            else if (e.code === 'KeyR') { tpReset(); e.preventDefault(); }
+            else if (e.key === 'Escape' && !tpLocked && performance.now() - tpUnlockAt > 400) { tpClose(); e.preventDefault(); }
+        }, true);
+        window.addEventListener('keyup', (e) => { if (tpOpenFlag) e.stopImmediatePropagation(); }, true);
+        ['mousedown', 'mouseup', 'contextmenu'].forEach(t => tpOverlay.addEventListener(t, (e) => {
+            e.stopPropagation();
+            if (t === 'contextmenu') e.preventDefault();
+        }));
+
+        window.addEventListener('resize', () => { if (tpOpenFlag) tpLayout(); });
     </script>
 
     <script>
@@ -1579,23 +2165,45 @@ function hash(x, y, z) {
     return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
 }
 function sm(t) { return t * t * (3 - 2 * t); }
-function lerp(a, b, t) { return a + (b - a) * t; }
-function noise(x, y, z) {
-    var xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
-    var xf = sm(x - xi), yf = sm(y - yi), zf = sm(z - zi);
-    return lerp(
-        lerp(lerp(hash(xi, yi, zi), hash(xi + 1, yi, zi), xf), lerp(hash(xi, yi + 1, zi), hash(xi + 1, yi + 1, zi), xf), yf),
-        lerp(lerp(hash(xi, yi, zi + 1), hash(xi + 1, yi, zi + 1), xf), lerp(hash(xi, yi + 1, zi + 1), hash(xi + 1, yi + 1, zi + 1), xf), yf),
-        zf
-    );
+
+// Mesmo ruído de antes (3 oitavas de value noise), mas calculado de forma bem mais barata:
+// - os valores aleatórios (hash) são calculados só nos pontos da "grade" do ruído, não em cada célula
+// - a parte que depende só da coluna / só da linha é pré-calculada no resize
+var OCT_F = [1, 2, 4], OCT_FZ = [1, 1.5, 2], OCT_W = [0.6, 0.28, 0.12];
+var colI, colF, rowI, rowF, latW, latH, lat;
+
+function buildLattice() {
+    colI = []; colF = []; rowI = []; rowF = []; latW = []; latH = []; lat = [];
+    for (var o = 0; o < 3; o++) {
+        var ci = new Int32Array(cols), cf = new Float32Array(cols);
+        var ri = new Int32Array(rows), rf = new Float32Array(rows);
+        for (var i = 0; i < cols; i++) { var x = i * SCALE * OCT_F[o], xi = Math.floor(x); ci[i] = xi; cf[i] = sm(x - xi); }
+        for (var j = 0; j < rows; j++) { var y = j * SCALE * 1.7 * OCT_F[o], yi = Math.floor(y); ri[j] = yi; rf[j] = sm(y - yi); }
+        colI.push(ci); colF.push(cf); rowI.push(ri); rowF.push(rf);
+        latW.push(ci[cols - 1] + 2); latH.push(ri[rows - 1] + 2);
+        lat.push(new Float32Array(latW[o] * latH[o]));
+    }
 }
-function fbm(x, y, z) {
-    return noise(x, y, z) * 0.6 + noise(x * 2, y * 2, z * 1.5) * 0.28 + noise(x * 4, y * 4, z * 2) * 0.12;
+// valor do ruído em cada ponto da grade, já interpolado no tempo (eixo z)
+function fillLattice(z) {
+    for (var o = 0; o < 3; o++) {
+        var zz = z * OCT_FZ[o], zi = Math.floor(zz), zf = sm(zz - zi);
+        var L = lat[o], w = latW[o], h = latH[o], p = 0;
+        for (var y = 0; y < h; y++) {
+            for (var x = 0; x < w; x++, p++) {
+                var a = hash(x, y, zi);
+                L[p] = a + (hash(x, y, zi + 1) - a) * zf;
+            }
+        }
+    }
 }
 
 function buildAtlas() {
     atlas = makeCanvas(tw * (n + 1), th);
     var a = atlas.getContext('2d');
+    // fundo preto opaco: cada caractere já "apaga" a célula antiga ao ser desenhado
+    a.fillStyle = '#000';
+    a.fillRect(0, 0, tw * (n + 1), th);
     a.font = Math.round(th * 0.95) + 'px ui-monospace, Menlo, Consolas, monospace';
     a.textBaseline = 'top';
     for (var k = 1; k <= n; k++) {
@@ -1611,7 +2219,10 @@ function resize() {
     tw = Math.round(SIZE * 0.6 * dpr);
     cols = Math.ceil(cv.width / tw);
     rows = Math.ceil(cv.height / th);
-    grid = new Uint8Array(cols * rows);
+    grid = new Uint8Array(cols * rows).fill(255); // 255 = "nada desenhado ainda" -> força redesenho completo
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, cv.width, cv.height);
+    buildLattice();
     buildAtlas();
     // mudar width/height apaga o canvas: redesenha na hora para não piscar
     draw(reduce ? 0 : performance.now());
@@ -1619,28 +2230,38 @@ function resize() {
 }
 function draw(t) {
     var z = t * 0.001 * SPEED, cssW = tw / dpr, cssH = th / dpr, R = 140, R2 = R * R;
-    var i, j, v, dx, dy, d2, idx = 0;
+    var i, j, v, k, dx, dy, d2, idx = 0;
+    var L0 = lat[0], L1 = lat[1], L2 = lat[2], w0 = latW[0], w1 = latW[1], w2 = latW[2];
+    var ci0 = colI[0], ci1 = colI[1], ci2 = colI[2], cf0 = colF[0], cf1 = colF[1], cf2 = colF[2];
+    fillLattice(z);
     for (j = 0; j < rows; j++) {
+        // parte que só depende da linha: calculada uma vez por linha
+        var r0 = rowI[0][j] * w0, r1 = rowI[1][j] * w1, r2 = rowI[2][j] * w2;
+        var yf0 = rowF[0][j], yf1 = rowF[1][j], yf2 = rowF[2][j];
+        var rowNear = mx >= 0 && j * cssH - my < R && j * cssH - my > -R;
         for (i = 0; i < cols; i++, idx++) {
-            v = fbm(i * SCALE, j * SCALE * 1.7, z);
-            if (mx >= 0) {
+            var p, a, b, c, d, xf, top, n0, n1, n2;
+            p = r0 + ci0[i]; xf = cf0[i]; a = L0[p]; b = L0[p + 1]; c = L0[p + w0]; d = L0[p + w0 + 1];
+            top = a + (b - a) * xf; n0 = top + (c + (d - c) * xf - top) * yf0;
+            p = r1 + ci1[i]; xf = cf1[i]; a = L1[p]; b = L1[p + 1]; c = L1[p + w1]; d = L1[p + w1 + 1];
+            top = a + (b - a) * xf; n1 = top + (c + (d - c) * xf - top) * yf1;
+            p = r2 + ci2[i]; xf = cf2[i]; a = L2[p]; b = L2[p + 1]; c = L2[p + w2]; d = L2[p + w2 + 1];
+            top = a + (b - a) * xf; n2 = top + (c + (d - c) * xf - top) * yf2;
+            v = n0 * 0.6 + n1 * 0.28 + n2 * 0.12;
+            if (rowNear) {
                 dx = i * cssW - mx; dy = j * cssH - my;
-                if (dx < R && dx > -R && dy < R && dy > -R) {
+                if (dx < R && dx > -R) {
                     d2 = dx * dx + dy * dy;
                     if (d2 < R2) v = Math.min(1, v + (1 - Math.sqrt(d2) / R) * 0.35);
                 }
             }
             v = (v - 0.2) * 1.6;
-            grid[idx] = v <= 0 ? 0 : v >= 1 ? n : Math.round(v * n);
-        }
-    }
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, cv.width, cv.height);
-    idx = 0;
-    for (j = 0; j < rows; j++) {
-        for (i = 0; i < cols; i++, idx++) {
-            var k = grid[idx];
-            if (k) ctx.drawImage(atlas, k * tw, 0, tw, th, i * tw, j * th, tw, th);
+            k = v <= 0 ? 0 : v >= 1 ? n : Math.round(v * n);
+            // só redesenha as células cujo caractere mudou desde o último quadro
+            if (k !== grid[idx]) {
+                grid[idx] = k;
+                ctx.drawImage(atlas, k * tw, 0, tw, th, i * tw, j * th, tw, th);
+            }
         }
     }
 }
@@ -1675,6 +2296,7 @@ self.onmessage = function (e) {
     (function () {
         var cv = document.getElementById('ascii-bg');
         var overlay = document.getElementById('screen-test-overlay');
+        var tpOv = document.getElementById('tp-overlay');
         var src = document.getElementById('noise-src').textContent;
         var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         var send = null, worker = null;
@@ -1705,11 +2327,12 @@ self.onmessage = function (e) {
         }
 
         function syncPause() {
-            send({ type: 'pause', v: document.hidden || (overlay && overlay.style.display === 'flex') });
+            send({ type: 'pause', v: document.hidden || (overlay && overlay.style.display === 'flex') || (tpOv && tpOv.style.display === 'block') });
         }
         document.addEventListener('visibilitychange', syncPause);
         if (overlay && window.MutationObserver) {
             new MutationObserver(syncPause).observe(overlay, { attributes: true, attributeFilter: ['style'] });
+            if (tpOv) new MutationObserver(syncPause).observe(tpOv, { attributes: true, attributeFilter: ['style'] });
         }
 
         window.addEventListener('resize', function () {
@@ -1725,6 +2348,67 @@ self.onmessage = function (e) {
             if (!queued) { queued = true; requestAnimationFrame(flushMouse); }
         }, { passive: true });
         window.addEventListener('pointerleave', function () { mxx = myy = -1; send({ type: 'm', x: -1, y: -1 }); });
+    })();
+    </script>
+
+    <button class="zoom-lens" id="zoom-lens" type="button" aria-label="Zoom: arraste para cima/direita para aumentar, para baixo/esquerda para diminuir. Duplo clique volta para 60%." title="Arraste ↗ aumenta · ↙ diminui · duplo clique: 60%">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+    </button>
+    <div class="zoom-label" id="zoom-label" aria-live="polite"></div>
+    <script>
+    // --- LUPA DE ZOOM: arrastar para cima/direita aumenta, para baixo/esquerda diminui ---
+    // (necessária porque o testador de teclado bloqueia Cmd/Ctrl + e -)
+    (function () {
+        var DEFAULT = 0.6, MIN = 0.3, MAX = 1.5, PX_PER_STEP = 250; // DEFAULT = zoom inicial | 250px de arrasto = 100% de zoom
+        var lens = document.getElementById('zoom-lens');
+        var label = document.getElementById('zoom-label');
+        var root = document.documentElement;
+        var zoom = DEFAULT, sx = 0, sy = 0, sz = DEFAULT, dragging = false, hideTimer = null;
+
+        function apply(z, save) {
+            z = Math.min(MAX, Math.max(MIN, z));
+            if (Math.abs(z - 1) < 0.03) z = 1; // "imã" no 100%
+            else if (Math.abs(z - DEFAULT) < 0.03) z = DEFAULT; // e no zoom padrão
+            zoom = Math.round(z * 100) / 100;
+            root.style.setProperty('--ui-zoom', zoom);
+            label.textContent = Math.round(zoom * 100) + '%';
+            if (save) { try { localStorage.setItem('ui-zoom-v2', zoom); } catch (e) {} }
+        }
+        function showLabel(ms) {
+            label.classList.add('show');
+            clearTimeout(hideTimer);
+            if (ms) hideTimer = setTimeout(function () { label.classList.remove('show'); }, ms);
+        }
+
+        apply(DEFAULT, false);
+        try { var saved = parseFloat(localStorage.getItem('ui-zoom-v2')); if (saved) apply(saved, false); } catch (e) {}
+
+        // não registrar os cliques da lupa no testador de mouse
+        lens.addEventListener('mousedown', function (e) { e.stopPropagation(); });
+        lens.addEventListener('mouseup', function (e) { e.stopPropagation(); });
+
+        lens.addEventListener('pointerdown', function (e) {
+            e.preventDefault();
+            dragging = true; sx = e.clientX; sy = e.clientY; sz = zoom;
+            lens.setPointerCapture(e.pointerId);
+            lens.classList.add('dragging');
+            showLabel(0);
+        });
+        lens.addEventListener('pointermove', function (e) {
+            if (!dragging) return;
+            var d = (e.clientX - sx) - (e.clientY - sy); // direita/cima = positivo
+            apply(sz + d / PX_PER_STEP, false);
+        });
+        function end() {
+            if (!dragging) return;
+            dragging = false;
+            lens.classList.remove('dragging');
+            apply(zoom, true);
+            showLabel(1200);
+        }
+        lens.addEventListener('pointerup', end);
+        lens.addEventListener('pointercancel', end);
+        lens.addEventListener('dblclick', function () { apply(DEFAULT, true); showLabel(1200); });
     })();
     </script>
 
