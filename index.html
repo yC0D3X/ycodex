@@ -500,7 +500,7 @@
             transition: width 0.6s var(--ease), padding 0.6s var(--ease);
         }
         .dock.open .dock-items {
-            width: calc(var(--s) * 4 + var(--g) * 4 + 20px);
+            width: calc(var(--s) * 5 + var(--g) * 5 + 20px);
             padding-right: calc(10px + var(--g));
             pointer-events: auto;
         }
@@ -549,6 +549,7 @@
         .nav-btn:nth-last-child(2) { --i: 2; --dc: 0.04s; --do: 0.08s; }
         .nav-btn:nth-last-child(3) { --i: 3; --dc: 0.02s; --do: 0.12s; }
         .nav-btn:nth-last-child(4) { --i: 4; --dc: 0s;    --do: 0.16s; }
+        .nav-btn:nth-last-child(5) { --i: 5; --dc: 0s;    --do: 0.20s; }
 
         @media (hover: hover) {
             .nav-btn:hover, .dock-toggle:hover {
@@ -891,6 +892,78 @@
         }
         .zoom-label.show { opacity: 1; }
 
+        /* Ficha técnica */
+        .fx-run { display: flex; flex-direction: column; gap: 10px; }
+        .fx-run-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .fx-os { display: inline-flex; padding: 3px; gap: 3px; border: 1px solid var(--border); border-radius: 10px; background: #0b0b0b; }
+        .fx-os button {
+            border: 0; background: transparent; color: var(--muted);
+            font: 600 0.75rem 'Inter', sans-serif; letter-spacing: 0.04em;
+            padding: 6px 12px; border-radius: 7px; cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .fx-os button:hover { color: #fff; }
+        .fx-os button.on { background: #fff; color: #000; }
+        .fx-status { display: flex; align-items: center; gap: 8px; text-align: left; font-size: 0.8rem; color: var(--muted); }
+        .fx-dot { width: 8px; height: 8px; border-radius: 50%; background: #555; flex: none; animation: fxWait 1.4s ease-in-out infinite; }
+        .fx-status.ok { color: #b6ffb6; }
+        .fx-status.ok .fx-dot { background: #b6ffb6; animation: none; }
+        @keyframes fxWait { 50% { opacity: 0.25; } }
+        .fx-import { text-align: left; font-size: 0.78rem; color: var(--muted); }
+        .fx-import summary { cursor: pointer; width: max-content; }
+        .fx-import summary:hover { color: #fff; }
+        .fx-import-row { display: flex; gap: 8px; margin-top: 8px; }
+        .fx-import textarea {
+            flex: 1; resize: vertical; min-height: 38px;
+            background: #0b0b0b; color: var(--text); border: 1px solid var(--border-strong); border-radius: 8px;
+            padding: 8px 10px; font: 0.75rem ui-monospace, Menlo, Consolas, monospace;
+        }
+        .fx-btn {
+            background: #fff; color: #000; border: 0; border-radius: 8px; padding: 0 16px;
+            font: 700 0.75rem 'Inter', sans-serif; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer;
+        }
+        .fx-btn:hover { background: #e6e6e6; }
+
+        .fx-sheet { display: flex; flex-direction: column; text-align: left; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .fx-section {
+            font-family: 'Archivo Black', sans-serif; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase;
+            text-align: center; padding: 9px 12px; background: #101010; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+        }
+        .fx-section:first-child { border-top: 0; }
+        .fx-row { display: flex; flex-wrap: wrap; align-items: stretch; border-bottom: 1px solid var(--border); }
+        .fx-row:last-child { border-bottom: 0; }
+        .fx-field { display: flex; align-items: center; gap: 10px; flex: 1 1 220px; min-width: 0; padding: 7px 12px; }
+        .fx-field + .fx-field { border-left: 1px solid var(--border); }
+        .fx-field.short { flex: 0 1 150px; }
+        .fx-field label { flex: none; font-size: 0.74rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
+        .fx-field input {
+            flex: 1; min-width: 0; background: transparent; border: 0; color: var(--text);
+            font: 500 0.82rem 'Inter', sans-serif; padding: 4px 0; outline: none; border-bottom: 1px dashed transparent;
+        }
+        .fx-field input:hover { border-bottom-color: var(--border-strong); }
+        .fx-field input:focus { border-bottom-color: #fff; }
+        .fx-field input.auto { color: #fff; }
+        .fx-field input[type="date"] { color-scheme: dark; }
+        .fx-checks { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; flex: 1 1 auto; padding: 7px 12px; }
+        .fx-field + .fx-checks, .fx-checks + .fx-field, .fx-checks + .fx-checks { border-left: 1px solid var(--border); }
+        .fx-cb { display: inline-flex; align-items: center; gap: 7px; font-size: 0.78rem; font-weight: 600; color: var(--muted); cursor: pointer; user-select: none; }
+        .fx-cb input { position: absolute; opacity: 0; pointer-events: none; }
+        .fx-cb .box {
+            width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid #4a4a4a; background: #0b0b0b; flex: none;
+            display: inline-flex; align-items: center; justify-content: center; transition: background 0.15s, border-color 0.15s;
+        }
+        .fx-cb .box::after { content: ''; width: 8px; height: 4px; border-left: 2px solid #000; border-bottom: 2px solid #000; transform: rotate(-45deg) translate(1px, -1px); opacity: 0; }
+        .fx-cb input:checked + .box { background: #fff; border-color: #fff; }
+        .fx-cb input:checked + .box::after { opacity: 1; }
+        .fx-cb input:checked ~ .lbl { color: #fff; }
+        .fx-cb input:focus-visible + .box { outline: 2px solid #fff; outline-offset: 2px; }
+        .fx-cb .code { color: var(--dim); font-weight: 500; }
+        .fx-actions { display: flex; justify-content: flex-end; }
+        .fx-actions .standard-btn { width: auto; margin-top: 0; padding: 10px 20px; }
+        @media (max-width: 560px) {
+            .fx-field + .fx-field, .fx-field + .fx-checks, .fx-checks + .fx-field, .fx-checks + .fx-checks { border-left: 0; border-top: 1px solid var(--border); }
+        }
+
         /* Teste de touchpad */
         .tp-desc {
             margin: 0;
@@ -1138,6 +1211,10 @@
                 <button class="nav-btn" data-tab="downloads" title="Downloads" aria-label="Downloads" onclick="switchTab('downloads')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     <span>Downloads</span>
+                </button>
+                <button class="nav-btn" data-tab="ficha" title="Ficha Técnica" aria-label="Ficha Técnica" onclick="switchTab('ficha')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+                    <span>Ficha</span>
                 </button>
                 <button class="nav-btn" data-tab="screentest" title="Tela" aria-label="Tela" onclick="switchTab('screentest')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
@@ -1481,6 +1558,43 @@
             </div>
         </div>
     </div><!-- /tab-screentest -->
+
+    <div class="tab-panel" id="tab-ficha">
+        <div class="card">
+            <h2>Ficha Técnica</h2>
+            <div class="card-content" style="align-items: stretch; gap: 16px;">
+                <div class="fx-run">
+                    <div class="fx-run-head">
+                        <p class="cmd-intro" style="margin:0">Rode o comando no terminal <strong style="color:#fff">desta máquina</strong>. A ficha é preenchida sozinha.</p>
+                        <div class="fx-os" role="tablist" aria-label="Sistema">
+                            <button type="button" data-os="win" onclick="fxSetOS('win')">Windows</button>
+                            <button type="button" data-os="unix" onclick="fxSetOS('unix')">macOS / Linux</button>
+                        </div>
+                    </div>
+                    <div class="cmd-row">
+                        <span class="cmd-tag" id="fx-cmd-tag">WINDOWS</span>
+                        <span class="cmd-code" id="fx-cmd">…</span>
+                        <span class="cmd-meta" id="fx-cmd-meta"><span class="dot">●</span>PowerShell</span>
+                        <button class="copy-btn" onclick="copyCmd(this)">Copy</button>
+                    </div>
+                    <div class="fx-status" id="fx-status"><span class="fx-dot"></span>Aguardando o comando…</div>
+                    <details class="fx-import">
+                        <summary>Importar código manualmente</summary>
+                        <div class="fx-import-row">
+                            <textarea id="fx-import-code" rows="2" placeholder="Cole aqui o código que o script mostrou no terminal"></textarea>
+                            <button type="button" class="fx-btn" onclick="fxImportManual()">Importar</button>
+                        </div>
+                    </details>
+                </div>
+
+                <form class="fx-sheet" id="fx-sheet" autocomplete="off" onsubmit="return false"></form>
+
+                <div class="fx-actions">
+                    <button type="button" class="standard-btn stop" onclick="fxClear()">Nova ficha</button>
+                </div>
+            </div>
+        </div>
+    </div><!-- /tab-ficha -->
     </div>
 
     <div id="screen-test-overlay" onclick="stClose()">
@@ -1934,7 +2048,7 @@
         }
 
         window.addEventListener('keydown', function(e) {
-            if (e.target.closest && e.target.closest('.dock')) return;
+            if (e.target.closest && e.target.closest('.dock, input, textarea, select, [contenteditable]')) return;
             e.preventDefault();
             updateLog(e.key, e.code);
             const keyElement = handleDynamicKey(e);
@@ -1945,7 +2059,7 @@
         });
 
         window.addEventListener('keyup', function(e) {
-            if (e.target.closest && e.target.closest('.dock')) return;
+            if (e.target.closest && e.target.closest('.dock, input, textarea, select, [contenteditable]')) return;
             e.preventDefault();
             const keyElement = document.getElementById(e.code);
             if (keyElement) {
@@ -1972,7 +2086,7 @@
             }
         });
 
-        window.addEventListener('contextmenu', e => e.preventDefault());
+        window.addEventListener('contextmenu', e => { if (!(e.target.closest && e.target.closest('input, textarea'))) e.preventDefault(); });
 
         // --- LÓGICA PERIFÉRICOS ---
         let webcamStream = null;
@@ -2348,6 +2462,304 @@ self.onmessage = function (e) {
             if (!queued) { queued = true; requestAnimationFrame(flushMouse); }
         }, { passive: true });
         window.addEventListener('pointerleave', function () { mxx = myy = -1; send({ type: 'm', x: -1, y: -1 }); });
+    })();
+    </script>
+
+    <script>
+    // --- FICHA TÉCNICA ---
+    // O comando roda no terminal da máquina, coleta as informações e abre este site com os dados
+    // no próprio link (#ficha=...). Nada passa por servidor. Aqui os dados viram a ficha.
+    (function () {
+        const RAW = 'https://raw.githubusercontent.com/yC0D3X/Fichas/main/';
+        const STORE = 'ficha-v1', STORE_TEC = 'ficha-tecnico';
+
+        // Layout da ficha (igual à folha em papel). Para mudar um campo, mexa só aqui.
+        //   ['id', 'Rótulo', 'short' | 'date'] -> campo de texto (short = mais estreito)
+        //   {cb: [['id', 'Rótulo', 'código'], ...]} -> grupo de checkboxes
+        const LAYOUT = [
+            'Identificação',
+            [['tecnico', 'Técnico'], ['data', 'Data', 'date']],
+            [['estetica', 'Estética']],
+            [['marca', 'Marca'], ['modelo', 'Modelo']],
+            [['serial', 'Serial'], ['asset', 'Asset tag']],
+            [['so', 'Sistema']],
+            'Especificação Técnica',
+            [['proc', 'Proc'], ['ghz', 'Ghz', 'short'], ['geracao', 'G°', 'short']],
+            [['memoria', 'Memória']],
+            [['hd', 'HD'], { cb: [['msata', 'Msata'], ['ssd', 'SSD'], ['hdd', 'HD'], ['m2', 'M2']] }],
+            [['teclado', 'Teclado']],
+            [['video', 'Placa de Vídeo']],
+            [['tela', 'Tela']],
+            [['usb', 'USB'], ['typec', 'Type C'], ['webcam', 'Webcam']],
+            [{ cb: [['biometria', 'Biometria']] }],
+            [['leitor', 'Leitor']],
+            [['rede', 'Rede/Wi-Fi']],
+            [['audio', 'Áudio / Microfone']],
+            [['bateria', 'Bateria'], ['fonte', 'Fonte']],
+            [['touchpad', 'Touchpad'], { cb: [['trackpoint', 'Trackpoint']] }],
+            [{ cb: [['bluetooth', 'Bluetooth']] }],
+            [{ cb: [['vga', 'VGA'], ['hdmi', 'HDMI'], ['dp', 'DP'], ['nfc', 'NFC']] }],
+            [['quebrado', 'Quebrado']],
+            'Destino',
+            [{ cb: [['triagem', 'Triagem Armazém', '10'], ['reparo', 'Reparo Armazém', '05'], ['desmonte', 'Desmonte Armazém', '15'], ['estoque', 'Estoque Armazém', '01']] }],
+        ];
+        const DEFAULTS = { quebrado: 'N/A' };
+
+        const sheet = document.getElementById('fx-sheet');
+        const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+        // ---------- monta o formulário ----------
+        let html = '';
+        for (const row of LAYOUT) {
+            if (typeof row === 'string') { html += `<div class="fx-section">${esc(row)}</div>`; continue; }
+            html += '<div class="fx-row">';
+            for (const f of row) {
+                if (f.cb) {
+                    html += '<div class="fx-checks">' + f.cb.map(([id, label, code]) =>
+                        `<label class="fx-cb"><input type="checkbox" id="fx-${id}" data-k="${id}"><span class="box"></span><span class="lbl">${esc(label)}</span>${code ? `<span class="code">(${code})</span>` : ''}</label>`
+                    ).join('') + '</div>';
+                } else {
+                    const [id, label, kind] = f;
+                    html += `<div class="fx-field${kind === 'short' ? ' short' : ''}"><label for="fx-${id}">${esc(label)}:</label>` +
+                            `<input id="fx-${id}" data-k="${id}" type="${kind === 'date' ? 'date' : 'text'}" spellcheck="false"></div>`;
+                }
+            }
+            html += '</div>';
+        }
+        sheet.innerHTML = html;
+        const inputs = Array.from(sheet.querySelectorAll('[data-k]'));
+        const byId = (k) => document.getElementById('fx-' + k);
+
+        // ---------- comando conforme o sistema ----------
+        function detectOS() {
+            const p = ((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || '').toLowerCase();
+            return /win/.test(p) ? 'win' : 'unix';
+        }
+        window.fxSetOS = function (os) {
+            const site = location.href.split('#')[0];
+            const cmd = os === 'win'
+                ? `$ycSite='${site.replace(/'/g, "''")}'; irm ${RAW}ficha.ps1 | iex`
+                : `curl -fsSL ${RAW}ficha.sh | bash -s -- '${site.replace(/'/g, "'\\''")}'`;
+            document.getElementById('fx-cmd').textContent = cmd;
+            document.getElementById('fx-cmd-tag').textContent = os === 'win' ? 'WINDOWS' : 'MAC / LINUX';
+            document.getElementById('fx-cmd-meta').innerHTML = '<span class="dot">●</span>' + (os === 'win' ? 'PowerShell' : 'Terminal');
+            document.querySelectorAll('.fx-os button').forEach((b) => b.classList.toggle('on', b.dataset.os === os));
+        };
+        fxSetOS(detectOS());
+
+        // ---------- dados da máquina -> textos da ficha ----------
+        const arr = (x) => (x == null || x === '' ? [] : Array.isArray(x) ? x : [x]);
+        const uniq = (a) => a.filter((v, i) => v && a.indexOf(v) === i);
+        const BRANDS = [[/lenovo/i, 'Lenovo'], [/hewlett|^hp\b/i, 'HP'], [/dell/i, 'Dell'], [/apple/i, 'Apple'], [/asus/i, 'ASUS'],
+                        [/acer/i, 'Acer'], [/samsung/i, 'Samsung'], [/microsoft/i, 'Microsoft'], [/positivo/i, 'Positivo'],
+                        [/toshiba|dynabook/i, 'Toshiba'], [/fujitsu/i, 'Fujitsu'], [/micro-star|^msi\b/i, 'MSI'], [/^lg/i, 'LG'], [/vaio|sony/i, 'VAIO']];
+        const brandName = (b) => { for (const [rx, n] of BRANDS) if (rx.test(b || '')) return n; return b || ''; };
+        // valores "vazios" que os fabricantes gravam no lugar do serial / asset tag
+        const PLACEHOLDER = /^(\s*|0+|none|n\/?a|default string|system serial number|to be filled.*|not (specified|available|applicable)|no asset.*|asset-?\d*|chassis serial number|\.+)$/i;
+        const real = (v) => (v && !PLACEHOLDER.test(String(v).trim()) ? String(v).trim() : '');
+
+        function cpuClean(n) {
+            return (n || '').replace(/\((R|TM|C)\)/gi, '').replace(/\bCPU\b/gi, '').replace(/@.*$/, '').replace(/\b\d+(st|nd|rd|th) Gen\b/i, '')
+                .replace(/\s+with\s+.*(Graphics|Gfx).*$/i, '').replace(/\s+\d+-Core Processor$/i, '').replace(/\s+/g, ' ').trim();
+        }
+        // geração do processador a partir do nome
+        function cpuGen(n) {
+            n = n || '';
+            let m;
+            if ((m = n.match(/Ultra\s*[579]\s*(\d)\d{2}/i))) return 'Ultra S' + m[1];          // Core Ultra 7 155H -> Série 1
+            if ((m = n.match(/\bi[3579]-(\d{3,5})([A-Z]*)/i))) {
+                const d = m[1], suf = m[2] || '';
+                if (d.length === 5) return d.slice(0, 2) + 'ª';                                // i7-10510U, i5-12450H
+                if (d.length === 3) return '1ª';                                               // i5-520M
+                if (d[0] === '1' && (/^[GN]/i.test(suf) || /^1[0-4]/.test(d))) return d.slice(0, 2) + 'ª';  // i5-1135G7, i5-1235U
+                return d[0] + 'ª';                                                             // i5-8350U
+            }
+            if (/\bi[3579]\s+(?:CPU\s+)?[MUQ]?\s*\d{3}\b/i.test(n)) return '1ª';              // i5 CPU M 520 (formato antigo)
+            if ((m = n.match(/Ryzen\s+(?:AI\s+)?[3579]\s+(?:PRO\s+)?(\d)\d{3}/i))) return 'Série ' + m[1] + '000';
+            if ((m = n.match(/Apple\s+(M\d+)/i))) return m[1];
+            return '';
+        }
+        function ghzOf(cpu) {
+            const m = (cpu.name || '').match(/@\s*([\d.]+)\s*GHz/i);
+            if (m) return m[1];
+            return cpu.mhz ? String(+(cpu.mhz / 1000).toFixed(2)) : '';
+        }
+        // 1024 GB -> "1 TB", 512 -> "512 GB"
+        const gbLabel = (gb) => (!gb ? '' : gb >= 900 ? String(+(gb / 1000).toFixed(gb % 1000 < 60 || gb % 1024 < 60 ? 0 : 1)) + ' TB' : Math.round(gb) + ' GB');
+        // tamanho medido (EDID) -> tamanho comercial mais próximo
+        const SIZES = [10.1, 11.6, 12, 12.3, 12.5, 13, 13.3, 13.4, 13.5, 13.6, 14, 14.2, 14.5, 15, 15.3, 15.4, 15.6, 16, 16.2, 17, 17.3, 18];
+        // Estado da bateria no estilo Dell, pela % da capacidade original que ainda resta.
+        // Ajuste os limites aqui se quiser: [% mínima, nome]
+        const BATT_STATES = [[80, 'Excellent'], [60, 'Good'], [40, 'Fair'], [0, 'Poor']];
+        const batState = (h) => (BATT_STATES.find(([min]) => h >= min) || [0, 'Poor'])[1];
+        // Condição da bateria da Apple (o macOS pode responder em inglês ou em português)
+        const COND = [[/^normal$/i, 'Normal'], [/service recommended|manuten..o recomendada/i, 'Manutenção recomendada'],
+                      [/replace soon|substituir em breve/i, 'Substituir em breve'], [/replace now|substituir agora/i, 'Substituir agora'],
+                      [/service battery|fazer manuten..o/i, 'Manutenção da bateria'], [/check battery|verificar bateria/i, 'Verificar bateria']];
+        const batCondition = (c) => { if (!c) return ''; for (const [rx, t] of COND) if (rx.test(c)) return t; return c; };
+        function inchLabel(x) {
+            if (!x) return '';
+            let best = x, d = 0.31;
+            for (const s of SIZES) if (Math.abs(s - x) < d) { d = Math.abs(s - x); best = s; }
+            return String(+best.toFixed(1)).replace('.', ',') + '"';
+        }
+        const KBD = {
+            '00000416': 'ABNT (PT-BR)', '00010416': 'ABNT2 (PT-BR)', '00000409': 'US', '00020409': 'US Internacional', '00010409': 'US Dvorak',
+            '00000816': 'PT (Portugal)', '0000080a': 'Latino-americano', '0000040a': 'Espanhol', '00000809': 'UK',
+            'br': 'ABNT2 (PT-BR)', 'br abnt2': 'ABNT2 (PT-BR)', 'us': 'US', 'us intl': 'US Internacional', 'us altgr-intl': 'US Internacional',
+            'pt': 'PT (Portugal)', 'latam': 'Latino-americano',
+            'brazilian': 'ABNT2 (PT-BR)', 'brazilian - pro': 'ABNT2 (PT-BR)', 'brazilian abnt2': 'ABNT2 (PT-BR)', 'u.s.': 'US', 'abc': 'US (ABC)',
+            'u.s. international - pc': 'US Internacional', 'abc - extended': 'US Internacional'
+        };
+        const kbdName = (k) => (k ? KBD[String(k).toLowerCase().trim()] || k : '');
+
+        function toSheet(d) {
+            const v = {}, c = {};
+            const cpu = d.cpu || {}, ram = d.ram || {}, mods = arr(ram.modules), disks = arr(d.disks), gpus = arr(d.gpus);
+            const scr = d.screen || {}, bat = d.battery || {};
+            v.data = (d.ts || '').slice(0, 10);
+            v.marca = brandName(d.brand);
+            let fam = real(d.family);
+            const mod = real(d.model);
+            if (d.platform === 'mac' && !/\s/.test(fam)) fam = '';   // Mac Intel: ali vinha só o identificador (MacBookPro16,1)
+            if (d.platform === 'mac') v.modelo = (fam || mod) + (d.sku ? ` (${d.sku})` : '');
+            else if (fam && /lenovo/i.test(d.brand || '') && fam.toLowerCase() !== mod.toLowerCase()) v.modelo = `${fam} (${mod})`;
+            else v.modelo = mod || fam;
+            v.serial = real(d.serial);
+            v.asset = real(d.asset);
+            v.so = d.os || '';
+            v.proc = cpuClean(cpu.name);
+            v.ghz = ghzOf(cpu);
+            v.geracao = cpuGen(cpu.name);
+            // memória: soma os pentes (o total do sistema vem sem a parte reservada para vídeo)
+            const sumMods = mods.reduce((a, m) => a + (+m.gb || 0), 0);
+            const total = sumMods || Math.round(+ram.totalGB || 0);
+            const mtype = (mods[0] && mods[0].type) || ram.type || '';
+            const mspeed = (mods[0] && mods[0].speed) || ram.speed || '';
+            let mem = total ? total + ' GB' : '';
+            if (mtype) mem += ' ' + mtype;
+            if (mspeed) mem += ' ' + mspeed + ' MHz';
+            if (mods.length > 1) mem += ' (' + mods.map((m) => Math.round(m.gb) + ' GB').join(' + ') + ')';
+            if (ram.slots) mem += ` · ${ram.slots} ${ram.slots > 1 ? 'slots' : 'slot'}`;
+            v.memoria = mem;
+            v.hd = disks.map((x) => [gbLabel(x.gb), x.type === 'Unspecified' ? '' : x.type, x.bus, x.model ? '– ' + x.model : ''].filter(Boolean).join(' ')).join('  +  ');
+            c.ssd = disks.some((x) => x.type === 'SSD');
+            c.hdd = disks.some((x) => x.type === 'HDD');
+            c.m2 = d.platform !== 'mac' && disks.some((x) => /nvme/i.test(x.bus || ''));
+            v.teclado = kbdName(d.keyboard);
+            v.video = gpus.map((g) => g.name + (g.vram ? ` (${g.vram < 1 ? Math.round(g.vram * 1024) + ' MB' : g.vram + ' GB'})` : '')).join('  +  ');
+            v.tela = [inchLabel(+scr.inches), scr.res, scr.touch ? 'Touch' : ''].filter(Boolean).join(' · ');
+            const cams = arr(d.webcam);
+            v.webcam = cams.length ? (cams.filter((n) => !/\bIR\b/i.test(n)).join(' + ') || 'Sim') : 'Não detectada';
+            c.biometria = arr(d.bio).length > 0;
+            v.leitor = uniq(arr(d.reader)).join(' + ');
+            const nets = arr(d.net);
+            const wifi = uniq(nets.filter((n) => n.kind === 'wifi').map((n) => n.name));
+            const eth = uniq(nets.filter((n) => n.kind !== 'wifi').map((n) => n.name.replace(/\s*#\d+$/, '')));
+            v.rede = [wifi.length ? 'Wi-Fi: ' + wifi.join(' + ') : 'Wi-Fi: não detectado', eth.length ? 'Ethernet: ' + eth.join(' + ') : ''].filter(Boolean).join(' · ');
+            const aud = arr(d.audio);
+            const main = aud.find((n) => /realtek|conexant|idt|cirrus|sound ?blaster|apple|speaker|alto-falante/i.test(n)) || aud[0] || '';
+            v.audio = [main, 'Mic: ' + (arr(d.mic).length ? 'Sim' : 'não detectado')].filter(Boolean).join(' · ');
+            if (!bat.present) v.bateria = 'Não detectada';
+            else if (d.platform === 'mac') {
+                // Apple: condição informada pelo macOS + ciclos (% só quando o próprio macOS mostra)
+                v.bateria = [batCondition(bat.condition), bat.cycles ? `${bat.cycles} ciclos` : '', bat.health != null ? `${bat.health}%` : ''].filter(Boolean).join(' · ');
+            } else {
+                // Windows / Linux: estado no estilo Dell (Excellent / Good / Fair / Poor) pela % de saúde
+                v.bateria = [bat.health != null ? `${batState(bat.health)} (${bat.health}%)` : 'Presente', bat.cycles ? `${bat.cycles} ciclos` : ''].filter(Boolean).join(' · ');
+            }
+            v.touchpad = arr(d.touchpad).length ? 'Sim' : '';
+            c.trackpoint = !!d.trackpoint;
+            c.bluetooth = !!d.bt;
+            c.nfc = !!d.nfc;
+            return { v, c };
+        }
+
+        // ---------- estado (salvo no navegador para não perder ao recarregar) ----------
+        const empty = () => ({ values: {}, checks: {}, auto: [], ts: '', label: '' });
+        let state = empty();
+        const load = () => { try { return JSON.parse(localStorage.getItem(STORE)) || null; } catch (e) { return null; } };
+        const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {} };
+
+        function render() {
+            for (const el of inputs) {
+                const k = el.dataset.k;
+                if (k === 'tecnico') continue;
+                if (el.type === 'checkbox') el.checked = !!state.checks[k];
+                else el.value = state.values[k] != null ? state.values[k] : (DEFAULTS[k] || '');
+                el.classList.toggle('auto', state.auto.includes(k));
+            }
+            try { byId('tecnico').value = localStorage.getItem(STORE_TEC) || ''; } catch (e) {}
+            const st = document.getElementById('fx-status');
+            if (state.ts) {
+                const dt = new Date(state.ts);
+                const when = isNaN(dt) ? state.ts : dt.toLocaleDateString('pt-BR') + ' às ' + dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                st.innerHTML = `<span class="fx-dot"></span>Dados coletados em ${esc(when)}${state.label ? ' — ' + esc(state.label) : ''}`;
+                st.classList.add('ok');
+            } else {
+                st.innerHTML = '<span class="fx-dot"></span>Aguardando o comando…';
+                st.classList.remove('ok');
+            }
+        }
+
+        function applyData(d) {
+            const { v, c } = toSheet(d);
+            state = empty();
+            state.checks = c;
+            state.ts = d.ts || '';
+            state.label = [v.marca, v.modelo].filter(Boolean).join(' ');
+            for (const k in v) if (v[k]) { state.values[k] = v[k]; if (k !== 'data') state.auto.push(k); }
+            for (const k in c) if (c[k]) state.auto.push(k);
+            save();
+            render();
+        }
+
+        function decode(code) {
+            code = String(code).trim().replace(/^.*#ficha=/, '').replace(/\s+/g, '').replace(/-/g, '+').replace(/_/g, '/');
+            while (code.length % 4) code += '=';
+            const bin = atob(code);
+            const bytes = Uint8Array.from(bin, (ch) => ch.charCodeAt(0));
+            return JSON.parse(new TextDecoder().decode(bytes));
+        }
+
+        // edições manuais (campos de texto e checkboxes)
+        function onEdit(e) {
+            const el = e.target, k = el.dataset && el.dataset.k;
+            if (!k) return;
+            if (k === 'tecnico') { try { localStorage.setItem(STORE_TEC, el.value); } catch (er) {} return; }
+            if (el.type === 'checkbox') state.checks[k] = el.checked; else state.values[k] = el.value;
+            state.auto = state.auto.filter((x) => x !== k);
+            el.classList.remove('auto');
+            save();
+        }
+        sheet.addEventListener('input', onEdit);
+        sheet.addEventListener('change', (e) => { if (e.target.type === 'checkbox') onEdit(e); });
+
+        window.fxClear = function () {
+            if (!confirm('Começar uma ficha nova? Os dados atuais serão apagados (o nome do técnico continua).')) return;
+            state = empty();
+            save();
+            render();
+        };
+        window.fxImportManual = function () {
+            const ta = document.getElementById('fx-import-code');
+            try { applyData(decode(ta.value)); ta.value = ''; ta.closest('details').open = false; }
+            catch (e) { alert('Código inválido. Copie o código inteiro que o script mostrou no terminal.'); }
+        };
+
+        // outra aba do site recebeu dados novos -> atualiza esta também
+        window.addEventListener('storage', (e) => { if (e.key === STORE || e.key === STORE_TEC) { state = load() || empty(); render(); } });
+
+        // chegou pelo comando? (#ficha=...)
+        state = load() || empty();
+        if (location.hash.indexOf('#ficha=') === 0) {
+            try {
+                applyData(decode(location.hash));
+                switchTab('ficha');
+            } catch (e) { console.warn('Ficha: dados inválidos no link', e); }
+            history.replaceState(null, '', location.pathname + location.search);
+        }
+        render();
     })();
     </script>
 
