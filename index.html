@@ -958,7 +958,11 @@
         .fx-cb input:checked ~ .lbl { color: #fff; }
         .fx-cb input:focus-visible + .box { outline: 2px solid #fff; outline-offset: 2px; }
         .fx-cb .code { color: var(--dim); font-weight: 500; }
-        .fx-actions { display: flex; justify-content: flex-end; }
+        .fx-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+        .fx-print { background: none; border: 0; padding: 6px; color: #fff; cursor: pointer; display: inline-flex; opacity: 0.85; transition: opacity 0.15s, transform 0.05s; }
+        .fx-print svg { width: 26px; height: 26px; }
+        .fx-print:hover { opacity: 1; filter: drop-shadow(0 0 6px rgba(255,255,255,0.45)); }
+        .fx-print:active { transform: translateY(1px); }
         .fx-actions .standard-btn { width: auto; margin-top: 0; padding: 10px 20px; }
         @media (max-width: 560px) {
             .fx-field + .fx-field, .fx-field + .fx-checks, .fx-checks + .fx-field, .fx-checks + .fx-checks { border-left: 0; border-top: 1px solid var(--border); }
@@ -1165,7 +1169,7 @@
         </div>
     </div>
     <script>
-    // --- PRÉ-LOADER: some sozinho em ~2,8s (clique para pular) ---
+    // --- PRÉ-LOADER: some sozinho em ~2,8s (não dá para pular) ---
     (function () {
         var pl = document.getElementById('preloader');
         var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1190,7 +1194,8 @@
         }
         if (!reduce) { blink(650); blink(950); blink(2000); }        // piscada dupla + uma depois do logo
         setTimeout(finish, reduce ? 1000 : 2450);
-        pl.addEventListener('mousedown', function (e) { e.stopPropagation(); finish(); });
+        // cliques em cima do pré-loader não pulam e não chegam ao testador de mouse
+        pl.addEventListener('mousedown', function (e) { e.stopPropagation(); });
         pl.addEventListener('mouseup', function (e) { e.stopPropagation(); });
     })();
     </script>
@@ -1590,6 +1595,9 @@
                 <form class="fx-sheet" id="fx-sheet" autocomplete="off" onsubmit="return false"></form>
 
                 <div class="fx-actions">
+                    <button type="button" class="fx-print" onclick="fxPrint()" aria-label="Imprimir ficha" title="Imprimir ficha">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7" rx="1"/><line x1="17.5" y1="11.5" x2="17.51" y2="11.5"/></svg>
+                    </button>
                     <button type="button" class="standard-btn stop" onclick="fxClear()">Nova ficha</button>
                 </div>
             </div>
@@ -2747,17 +2755,129 @@ self.onmessage = function (e) {
             catch (e) { alert('Código inválido. Copie o código inteiro que o script mostrou no terminal.'); }
         };
 
+        // ---------- impressão: abre a ficha numa página limpa, pronta para Ctrl+P ----------
+        window.fxPrint = function () {
+            const val = (k) => { const el = byId(k); return el ? el.value : ''; };
+            const chk = (k) => { const el = byId(k); return !!(el && el.checked); };
+            // cada seção (título + linhas) vira um bloco; em paisagem a maior vai para a coluna da direita
+            const secs = [];
+            for (const row of LAYOUT) {
+                if (typeof row === 'string') { secs.push({ html: `<h2>${esc(row)}</h2>`, rows: 0 }); continue; }
+                const sec = secs[secs.length - 1];
+                let h = '<div class="row">';
+                for (const f of row) {
+                    if (f.cb) {
+                        h += '<div class="checks">' + f.cb.map(([id, label, code]) =>
+                            `<span class="cb"><span class="box">${chk(id) ? '✓' : ''}</span>${esc(label)}${code ? ` <small>(${code})</small>` : ''}</span>`
+                        ).join('') + '</div>';
+                    } else {
+                        const [id, label, kind] = f;
+                        let v = val(id);
+                        if (kind === 'date' && /^\d{4}-\d{2}-\d{2}$/.test(v)) v = v.split('-').reverse().join('/');
+                        h += `<div class="f${kind === 'short' ? ' short' : ''}"><b>${esc(label)}:</b><span class="v">${esc(v)}</span></div>`;
+                    }
+                }
+                sec.html += h + '</div>';
+                sec.rows++;
+            }
+            const wrap = (x) => `<section>${x.html}</section>`;
+            const big = secs.reduce((a, b) => (b.rows > a.rows ? b : a), secs[0]);
+            const portrait = secs.map(wrap).join('');
+            const landscape = `<div class="cols"><div>${secs.filter((x) => x !== big).map(wrap).join('')}</div><div>${wrap(big)}</div></div>`;
+            const title = 'Ficha Técnica' + (state.label ? ' — ' + state.label : '');
+            const doc = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${esc(title)}</title>
+<style id="pg">@page { size: A4 portrait; margin: 12mm; }</style><style>
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: #6b6b6b; color: #000; font: 11pt/1.25 Arial, Helvetica, sans-serif; padding: 64px 16px 32px; }
+.bar { position: fixed; top: 0; left: 0; right: 0; display: flex; gap: 8px; align-items: center; justify-content: center; padding: 10px; background: #111; color: #fff; font: 13px Arial, sans-serif; z-index: 2; }
+.bar button { font: inherit; background: none; color: #fff; border: 1px solid #555; border-radius: 6px; padding: 6px 14px; cursor: pointer; }
+.bar button.on { background: #fff; color: #000; border-color: #fff; font-weight: bold; }
+.bar .tip { margin-left: 12px; opacity: .75; }
+.bar .warn { color: #ffb347; font-weight: bold; margin-left: 12px; }
+.sheet { background: #fff; margin: 0 auto; padding: 12mm; width: 210mm; height: 297mm; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,.45); }
+body.land .sheet { width: 297mm; height: 210mm; }
+header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #000; padding-bottom: 2mm; margin-bottom: 1mm; }
+header h1 { font-size: 16pt; margin: 0; letter-spacing: .5px; }
+header span { font-size: 9pt; color: #444; }
+h2 { font-size: 10pt; text-transform: uppercase; letter-spacing: 1px; background: #e6e6e6; border: 1px solid #000; padding: 1mm 2mm; margin: 4mm 0 1mm; }
+.row { display: flex; gap: 5mm; align-items: flex-end; min-height: 8.5mm; padding-top: 1.5mm; }
+body.land .row { min-height: 8mm; padding-top: 1.2mm; }
+.cols { display: grid; grid-template-columns: 1fr 1.55fr; gap: 9mm; align-items: start; }
+.cols > div:first-child .row, body.land .cols > div:first-child .row { flex-wrap: wrap; row-gap: 3mm; min-height: 0; padding-top: 3mm; }
+.cols > div:first-child .f { flex-basis: 100%; }
+.f { flex: 1; display: flex; align-items: flex-end; gap: 1.5mm; min-width: 0; }
+.f.short { flex: 0 0 34mm; }
+.f.short .v { white-space: nowrap; }
+.f b { white-space: nowrap; }
+.v { flex: 1; min-width: 0; border-bottom: 1px solid #000; min-height: 5mm; padding: 0 1mm; font-size: 10pt; overflow-wrap: anywhere; }
+.checks { flex: 1; display: flex; flex-wrap: wrap; gap: 2mm 6mm; align-items: center; }
+.cb { display: inline-flex; align-items: center; gap: 1.5mm; white-space: nowrap; }
+.box { width: 4.2mm; height: 4.2mm; border: 1.3px solid #000; display: inline-flex; align-items: center; justify-content: center; font-size: 9pt; font-weight: bold; line-height: 1; }
+small { color: #444; }
+@media print {
+  body { background: #fff; padding: 0; }
+  .bar { display: none; }
+  .sheet, body.land .sheet { width: auto; height: auto; padding: 0; box-shadow: none; overflow: visible; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style></head><body>
+<div class="bar"><span>Folha:</span><button data-o="portrait">Retrato</button><button data-o="landscape">Paisagem</button><span class="warn" id="warn" hidden>Não cabe numa folha só</span><span class="tip">Ctrl+P para imprimir</span></div>
+<div class="sheet"><header><h1>Ficha Técnica</h1><span>yCODEX</span></header><div id="content"></div></div>
+<script>
+var L = ${JSON.stringify({ portrait, landscape }).replace(/</g, '\u003c')};
+function setO(o) {
+  document.getElementById('content').innerHTML = L[o];
+  document.body.classList.toggle('land', o === 'landscape');
+  document.getElementById('pg').textContent = '@page { size: A4 ' + o + '; margin: 12mm; }';
+  document.querySelectorAll('.bar button').forEach(function (b) { b.classList.toggle('on', b.dataset.o === o); });
+  var sh = document.querySelector('.sheet');
+  document.getElementById('warn').hidden = sh.scrollHeight <= sh.clientHeight + 1;
+  try { localStorage.setItem('ficha-print-orient', o); } catch (e) {}
+}
+document.querySelectorAll('.bar button').forEach(function (b) { b.onclick = function () { setO(b.dataset.o); }; });
+var saved = 'portrait'; try { saved = localStorage.getItem('ficha-print-orient') || 'portrait'; } catch (e) {}
+setO(saved === 'landscape' ? 'landscape' : 'portrait');
+<\/script>
+</body></html>`;
+            const w = window.open('', '_blank');
+            if (!w) { alert('O navegador bloqueou a nova página. Permita pop-ups para este site e tente de novo.'); return; }
+            w.document.open();
+            w.document.write(doc);
+            w.document.close();
+            w.focus();
+        };
+
         // outra aba do site recebeu dados novos -> atualiza esta também
         window.addEventListener('storage', (e) => { if (e.key === STORE || e.key === STORE_TEC) { state = load() || empty(); render(); } });
+
+        // Aba única: quando o comando abre uma aba nova com #ficha=..., ela avisa as abas do site que já
+        // estavam abertas; se alguma responder, os dados já foram para ela (localStorage) e a aba nova se fecha.
+        const chan = 'BroadcastChannel' in window ? new BroadcastChannel('ycodex-ficha') : null;
+        if (chan) chan.onmessage = (e) => {
+            if (!e.data || e.data.t !== 'nova') return;
+            state = load() || empty();
+            render();
+            switchTab('ficha');
+            chan.postMessage({ t: 'ok', id: e.data.id });
+            try { window.focus(); } catch (er) {}
+        };
 
         // chegou pelo comando? (#ficha=...)
         state = load() || empty();
         if (location.hash.indexOf('#ficha=') === 0) {
+            let ok = false;
             try {
                 applyData(decode(location.hash));
                 switchTab('ficha');
+                ok = true;
             } catch (e) { console.warn('Ficha: dados inválidos no link', e); }
             history.replaceState(null, '', location.pathname + location.search);
+            if (ok && chan) {
+                const id = Math.random().toString(36).slice(2);
+                chan.addEventListener('message', (e) => { if (e.data && e.data.t === 'ok' && e.data.id === id) window.close(); });
+                chan.postMessage({ t: 'nova', id });
+            }
         }
         render();
     })();
