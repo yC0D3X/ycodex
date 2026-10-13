@@ -2804,6 +2804,16 @@ self.onmessage = function (e) {
         const gbLabel = (gb) => (!gb ? '' : gb >= 900 ? String(+(gb / 1000).toFixed(gb % 1000 < 60 || gb % 1024 < 60 ? 0 : 1)) + ' TB' : Math.round(gb) + ' GB');
         // tamanho medido (EDID) -> tamanho comercial mais próximo
         const SIZES = [10.1, 11.6, 12, 12.3, 12.5, 13, 13.3, 13.4, 13.5, 13.6, 14, 14.2, 14.5, 15, 15.3, 15.4, 15.6, 16, 16.2, 17, 17.3, 18];
+        // Banco de Macs (identificador -> polegadas e nome comercial), lido do arquivo separado macs.json.
+        // pol null = vendido em dois tamanhos (vale a medida do script); 0 = sem tela embutida.
+        // Se não carregar (sem internet, arquivo aberto direto do disco), a ficha usa o que o script mediu.
+        let MACS = {};
+        const macsReady = Promise.race([
+            fetch('macs.json', { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : {}))
+                .then((db) => { for (const k in db) if (k[0] !== '_') MACS[k] = [db[k].pol, db[k].nome]; })
+                .catch(() => {}),
+            new Promise((r) => setTimeout(r, 2500))
+        ]);
         // Estado da bateria no estilo Dell, pela % da capacidade original que ainda resta.
         // Ajuste os limites aqui se quiser: [% mínima, nome]
         const BATT_STATES = [[80, 'Excellent'], [60, 'Good'], [40, 'Fair'], [0, 'Poor']];
@@ -2838,7 +2848,8 @@ self.onmessage = function (e) {
             let fam = real(d.family);
             const mod = real(d.model);
             if (d.platform === 'mac' && !/\s/.test(fam)) fam = '';   // Mac Intel: ali vinha só o identificador (MacBookPro16,1)
-            if (d.platform === 'mac') v.modelo = (fam || mod) + (d.sku ? ` (${d.sku})` : '');
+            const mac = d.platform === 'mac' && Object.hasOwn(MACS, d.sku || '') ? MACS[d.sku] : null;
+            if (d.platform === 'mac') v.modelo = ((mac && mac[1]) || fam || mod) + (d.sku ? ` (${d.sku})` : '');
             else if (fam && /lenovo/i.test(d.brand || '') && fam.toLowerCase() !== mod.toLowerCase()) v.modelo = `${fam} (${mod})`;
             else v.modelo = mod || fam;
             v.serial = real(d.serial);
@@ -2864,7 +2875,8 @@ self.onmessage = function (e) {
             c.m2 = d.platform !== 'mac' && disks.some((x) => /nvme/i.test(x.bus || ''));
             v.teclado = kbdName(d.keyboard);
             v.video = gpus.map((g) => g.name + (g.vram ? ` (${g.vram < 1 ? Math.round(g.vram * 1024) + ' MB' : g.vram + ' GB'})` : '')).join('  +  ');
-            v.tela = [inchLabel(+scr.inches), scr.res, scr.touch ? 'Touch' : ''].filter(Boolean).join(' · ');
+            // Mac conhecido: o tamanho do banco prevalece sobre o medido; desktop (0) usa o monitor medido
+            v.tela = [inchLabel((mac && mac[0]) || +scr.inches), scr.res, scr.touch ? 'Touch' : ''].filter(Boolean).join(' · ');
             const cams = arr(d.webcam);
             v.webcam = cams.length ? (cams.filter((n) => !/\bIR\b/i.test(n)).join(' + ') || 'Sim') : 'Não detectada';
             c.biometria = arr(d.bio).length > 0;
@@ -2959,8 +2971,9 @@ self.onmessage = function (e) {
         };
         window.fxImportManual = function () {
             const ta = document.getElementById('fx-import-code');
-            try { applyData(decode(ta.value)); ta.value = ''; ta.closest('details').open = false; }
-            catch (e) { alert('Código inválido. Copie o código inteiro que o script mostrou no terminal.'); }
+            let d;
+            try { d = decode(ta.value); } catch (e) { alert('Código inválido. Copie o código inteiro que o script mostrou no terminal.'); return; }
+            macsReady.then(() => { applyData(d); ta.value = ''; ta.closest('details').open = false; });
         };
 
         // ---------- impressão: abre a ficha numa página limpa, pronta para Ctrl+P ----------
@@ -3073,7 +3086,8 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
 
         // chegou pelo comando? (#ficha=...)
         state = load() || empty();
-        if (location.hash.indexOf('#ficha=') === 0) {
+        // espera o banco de Macs (no máximo 2,5 s) para a ficha já sair com o modelo e a tela certos
+        if (location.hash.indexOf('#ficha=') === 0) macsReady.then(() => {
             let ok = false;
             try {
                 applyData(decode(location.hash));
@@ -3086,7 +3100,7 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
                 chan.addEventListener('message', (e) => { if (e.data && e.data.t === 'ok' && e.data.id === id) window.close(); });
                 chan.postMessage({ t: 'nova', id });
             }
-        }
+        });
         render();
     })();
     </script>
