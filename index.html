@@ -872,6 +872,60 @@
                 inset 0 1px 0 rgba(255,255,255,0.22);
         }
         .zoom-lens.dragging { transform: scale(1.1); }
+
+        /* Botão de ligar/desligar o fundo animado (fica em cima da lupa) */
+        .bg-toggle {
+            position: fixed;
+            right: 16px;
+            bottom: 70px;
+            z-index: 50;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.28);
+            background:
+                linear-gradient(135deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.08) 100%),
+                rgba(20,20,20,0.85);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            cursor: pointer;
+            opacity: 0.9;
+            box-shadow:
+                0 8px 24px -8px rgba(0,0,0,0.9),
+                0 0 0 4px rgba(255,255,255,0.04),
+                inset 0 1px 0 rgba(255,255,255,0.18);
+            -webkit-tap-highlight-color: transparent;
+            transition: opacity 0.2s ease, transform 0.05s, border-color 0.2s ease, color 0.2s ease;
+        }
+        .bg-toggle:hover { opacity: 1; border-color: rgba(255,255,255,0.5); }
+        .bg-toggle:active { transform: scale(0.94); }
+        .bg-toggle:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+        .bg-toggle svg { width: 20px; height: 20px; display: block; pointer-events: none; }
+        .bg-toggle .bg-slash { opacity: 0; transition: opacity 0.2s ease; }
+        .bg-toggle.off { color: #8f8f8f; }
+        .bg-toggle.off .bg-slash { opacity: 1; color: #fff; }
+        .bg-toast {
+            position: fixed;
+            right: 70px;
+            bottom: 81px;
+            z-index: 50;
+            max-width: calc(100vw - 100px);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text);
+            background: rgba(20,20,20,0.92);
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            padding: 5px 9px;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateX(6px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        .bg-toast.show { opacity: 1; transform: none; }
         .zoom-lens svg { width: 20px; height: 20px; display: block; pointer-events: none; }
         .zoom-label {
             position: fixed;
@@ -959,6 +1013,18 @@
         .fx-cb input:focus-visible + .box { outline: 2px solid #fff; outline-offset: 2px; }
         .fx-cb .code { color: var(--dim); font-weight: 500; }
         .fx-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+        /* checkbox "testado" nos cards de teclado, câmera e microfone */
+        .test-ok { margin-top: 12px; align-self: flex-start; }
+        /* "Não possui touchpad": apaga os resultados e desativa o teste */
+        .card.tp-none .audio-results, .card.tp-none .tp-desc { opacity: 0.35; }
+        .card.tp-none #tp-start { opacity: 0.35; pointer-events: none; }
+        /* trava da ficha: lista o que falta testar */
+        .fx-gate { border: 1px solid var(--border-strong); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+        .fx-gate[hidden] { display: none; }
+        .fx-gate-title { margin: 0; font-size: 0.85rem; font-weight: 600; color: var(--text); }
+        .fx-gate .standard-btn { align-self: flex-start; width: auto; margin-top: 0; padding: 8px 16px; }
+        .fx-print.locked { opacity: 0.3; cursor: not-allowed; }
+        .fx-print.locked:hover { opacity: 0.4; filter: none; }
         .fx-print { background: none; border: 0; padding: 6px; color: #fff; cursor: pointer; display: inline-flex; opacity: 0.85; transition: opacity 0.15s, transform 0.05s; }
         .fx-print svg { width: 26px; height: 26px; }
         .fx-print:hover { opacity: 1; filter: drop-shadow(0 0 6px rgba(255,255,255,0.45)); }
@@ -1200,6 +1266,9 @@
     })();
     </script>
     <canvas id="ascii-bg" aria-hidden="true"></canvas>
+    <button class="bg-toggle" id="bg-toggle" type="button" aria-pressed="true" title="Desligar fundo animado" aria-label="Desligar fundo animado">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><line class="bg-slash" x1="3" y1="3" x2="21" y2="21"/></svg>
+    </button>
 
     <div class="brand">
         <div class="brand-logo" onclick="switchTab('tester')"><span class="brand-logo-btn"><span class="brand-logo-text">ycodex</span></span></div>
@@ -1366,6 +1435,7 @@
                 <div class="extra-keys-container" id="extra-keys-box">
                     <span style="color: #555; font-size: 0.8rem;">Teclas adicionais fora do padrão aparecem aqui</span>
                 </div>
+                <label class="fx-cb test-ok"><input type="checkbox" id="ok-keyboard"><span class="box"></span><span class="lbl">Teclado e mouse testados e funcionando</span></label>
             </div>
         </div>
 
@@ -1375,6 +1445,7 @@
                 <div class="card-content">
                     <video id="video" autoplay playsinline></video>
                 </div>
+                <label class="fx-cb test-ok"><input type="checkbox" id="ok-webcam"><span class="box"></span><span class="lbl">Câmera testada e funcionando</span></label>
                 <button id="btn-webcam" class="standard-btn" onclick="toggleWebcam()">Ligar Câmera</button>
             </div>
 
@@ -1386,6 +1457,7 @@
                     </div>
                     <p id="mic-status" style="color: #777; font-size: 0.78rem; margin: 8px 0 0 0; letter-spacing: 0.08em; text-transform: uppercase;">Desativado</p>
                 </div>
+                <label class="fx-cb test-ok"><input type="checkbox" id="ok-mic"><span class="box"></span><span class="lbl">Microfone testado e funcionando</span></label>
                 <button id="btn-mic" class="standard-btn" onclick="toggleMicrophone()">Ligar Microfone</button>
             </div>
 
@@ -1423,7 +1495,8 @@
                         <div class="audio-result" id="tp-card-pinch"><span class="dot-status">○</span> Pinça (zoom) — Não testado</div>
                     </div>
                 </div>
-                <button class="standard-btn" onclick="tpOpen()">Iniciar Teste</button>
+                <label class="fx-cb test-ok"><input type="checkbox" id="no-touchpad"><span class="box"></span><span class="lbl">Não possui touchpad</span></label>
+                <button class="standard-btn" id="tp-start" onclick="tpOpen()">Iniciar Teste</button>
             </div>
         </div>
     </div><!-- /tab-tester -->
@@ -1593,6 +1666,12 @@
                 </div>
 
                 <form class="fx-sheet" id="fx-sheet" autocomplete="off" onsubmit="return false"></form>
+
+                <div class="fx-gate" id="fx-gate" hidden>
+                    <p class="fx-gate-title">Conclua todos os testes para imprimir a ficha:</p>
+                    <div class="audio-results" id="fx-gate-list"></div>
+                    <button type="button" class="standard-btn stop" onclick="switchTab('tester')">Ir para os testes</button>
+                </div>
 
                 <div class="fx-actions">
                     <button type="button" class="fx-print" onclick="fxPrint()" aria-label="Imprimir ficha" title="Imprimir ficha">
@@ -2266,11 +2345,20 @@
     <script id="noise-src" type="text/plain">
 // --- Motor do fundo ASCII noise (roda num Worker, fora da thread principal) ---
 var RAMP = ' .:-=+*#%@';   // caracteres, do mais apagado ao mais forte
-var SIZE = 20;             // tamanho FIXO do caractere (px): 11 = bem fino | 14 = padrão | 18 = grande | 22 = enorme
-var AUTO_ADJUST = false;   // false = tamanho sempre fixo | true = aumenta sozinho se o PC ficar lento
+var SIZE = 20;             // tamanho do caractere (px) no nível 0 — os níveis abaixo controlam o resto
 var SCALE = 0.10;          // escala do ruído (menor = manchas maiores)
 var SPEED = 0.8;           // velocidade da animação
-var FPS = 24;              // quadros por segundo
+var FPS = 16;              // quadros por segundo no nível 0 (era 24)
+// Níveis de qualidade: se o PC não aguentar, o fundo desce de nível sozinho
+// (caractere maior = menos células; menos quadros = menos trabalho). No último nível, se ainda
+// estiver lento, avisa a página, que desliga o fundo.
+var LEVELS = [
+    { size: 20, fps: 16 },
+    { size: 26, fps: 12 },
+    { size: 34, fps: 8 }
+];
+var SLOW_MS = 12;          // tempo de desenho (ms por quadro) acima disso = lento
+var level = 0, slowSent = false;
 var GRAY_MIN = 45, GRAY_MAX = 200; // cinza mais escuro e mais claro (0-255)
 
 var n = RAMP.length - 1;
@@ -2387,21 +2475,32 @@ function draw(t) {
         }
     }
 }
+function setLevel(l) {
+    level = Math.max(0, Math.min(LEVELS.length - 1, l));
+    SIZE = LEVELS[level].size; FPS = LEVELS[level].fps;
+    ema = 0; frames = 0;
+    if (cv) resize();
+}
+// desce um nível; se já estiver no último, avisa a página que a máquina não aguenta
+function degrade() {
+    if (level < LEVELS.length - 1) setLevel(level + 1);
+    else if (!slowSent) { slowSent = true; self.postMessage({ type: 'slow' }); }
+}
 function tick() {
     setTimeout(tick, 1000 / FPS);
     if (paused || reduce) return;
     var s = performance.now();
     draw(s);
     ema = ema * 0.9 + (performance.now() - s) * 0.1;
-    // se estiver lento, aumenta o caractere sozinho (menos células)
-    if (AUTO_ADJUST && ++frames % 30 === 0 && frames > 60 && ema > 10 && SIZE < 24) { SIZE += 2; resize(); }
+    // mede o próprio desempenho: se o desenho estiver demorando, simplifica
+    if (++frames > 20 && ema > SLOW_MS) degrade();
 }
 self.onmessage = function (e) {
     var m = e.data;
     if (m.type === 'init') {
         cv = m.canvas; ctx = cv.getContext('2d', { alpha: false });
         W = m.w; H = m.h; dpr = m.dpr; reduce = m.reduce;
-        resize();
+        setLevel(m.level || 0);
         if (!reduce) tick();
     } else if (m.type === 'resize') {
         if (m.w === W && m.h === H && m.dpr === dpr) return;
@@ -2410,6 +2509,8 @@ self.onmessage = function (e) {
         mx = m.x; my = m.y;
     } else if (m.type === 'pause') {
         paused = m.v;
+    } else if (m.type === 'degrade') {
+        degrade();
     }
 };
     </script>
@@ -2422,34 +2523,130 @@ self.onmessage = function (e) {
         var src = document.getElementById('noise-src').textContent;
         var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         var send = null, worker = null;
-        function onReady() { cv.style.opacity = '1'; }
-        setTimeout(onReady, 1500); // segurança: nunca deixa o fundo invisível
+        var ready = false;
+        function onReady() { ready = true; if (!bgOff) cv.style.opacity = '1'; }
+        function fromEngine(m) {
+            if (!m) return;
+            if (m.type === 'ready') onReady();
+            else if (m.type === 'slow') autoOff();
+        }
+
+        // PC fraco (poucos núcleos/pouca memória) ou modo economia de dados: já começa num nível mais leve
+        var conn = navigator.connection || {};
+        var lowEnd = conn.saveData || (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
 
         function dims() {
-            return { w: window.innerWidth, h: window.innerHeight, dpr: Math.min(window.devicePixelRatio || 1, 2) };
+            // dpr travado em 1: em tela retina o canvas tinha 4x mais pixels para desenhar,
+            // e num fundo de caracteres cinza a diferença de nitidez quase não aparece
+            return { w: window.innerWidth, h: window.innerHeight, dpr: 1 };
         }
 
-        var d = dims();
-        // 1) tenta Worker + OffscreenCanvas (fora da thread principal)
-        if (window.Worker && window.OffscreenCanvas && cv.transferControlToOffscreen) {
+        // botão de ligar/desligar o fundo (a escolha fica salva no navegador)
+        var btn = document.getElementById('bg-toggle');
+        var bgOff = false, forced = false, wasAuto = false;
+        try {
+            bgOff = localStorage.getItem('bg-off') === '1';
+            wasAuto = localStorage.getItem('bg-auto') === '1'; // foi o site que desligou (não a pessoa)
+            forced = localStorage.getItem('bg-force') === '1'; // pessoa religou depois do desligamento automático
+        } catch (e) {}
+
+        // o motor só é criado quando o fundo está ligado: desligado, não gasta nada
+        function start() {
+            if (send) return;
+            var d = dims();
+            // 1) tenta Worker + OffscreenCanvas (fora da thread principal)
+            if (window.Worker && window.OffscreenCanvas && cv.transferControlToOffscreen) {
+                try {
+                    worker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+                    worker.onmessage = function (e) { fromEngine(e.data); };
+                    var off = cv.transferControlToOffscreen();
+                    worker.postMessage({ type: 'init', canvas: off, w: d.w, h: d.h, dpr: d.dpr, reduce: reduce, level: lowEnd ? 1 : 0 }, [off]);
+                    send = function (m) { worker.postMessage(m); };
+                } catch (err) { worker = null; send = null; }
+            }
+            // 2) plano B: roda o mesmo motor na thread principal (navegador antigo) — aqui ele
+            //    divide o processador com a página, então já começa um nível mais leve
+            if (!send && !cv.__transferred) {
+                var fake = { onmessage: null, postMessage: fromEngine };
+                new Function('self', src)(fake);
+                send = function (m) { fake.onmessage({ data: m }); };
+                send({ type: 'init', canvas: cv, w: d.w, h: d.h, dpr: d.dpr, reduce: reduce, level: lowEnd ? 2 : 1 });
+            }
+            setTimeout(onReady, 1500); // segurança: nunca deixa o fundo invisível
+            startMonitor();
+        }
+
+        // Vigia a fluidez da página (não só o fundo): se ela estiver abaixo de ~30 quadros/s,
+        // pede ao motor para simplificar. O motor desce de nível e, no último, avisa ('slow').
+        var monRaf = 0, monLast = 0, monSum = 0, monN = 0;
+        function startMonitor() { if (!monRaf) { monLast = 0; monRaf = requestAnimationFrame(monitor); } }
+        function monitor(t) {
+            if (bgOff || !send) { monRaf = 0; return; }
+            monRaf = requestAnimationFrame(monitor);
+            if (isPaused()) { monLast = 0; return; }
+            if (monLast) {
+                var dt = t - monLast;
+                if (dt < 250) { monSum += dt; monN++; } // pulos enormes = aba trocada, ignora
+            }
+            monLast = t;
+            if (monN >= 90) {
+                var avg = monSum / monN;
+                monSum = monN = 0;
+                if (avg > 33) send({ type: 'degrade' });
+            }
+        }
+
+        // último recurso: a máquina não aguenta nem o nível mais leve -> desliga e lembra disso
+        function autoOff() {
+            if (forced || bgOff) return;
+            bgOff = wasAuto = true;
+            try { localStorage.setItem('bg-off', '1'); localStorage.setItem('bg-auto', '1'); } catch (e) {}
+            applyBg();
+            toast('Fundo animado desligado para deixar o site mais leve');
+        }
+        var toastEl = null, toastT = 0;
+        function toast(msg) {
+            if (!toastEl) {
+                toastEl = document.createElement('div');
+                toastEl.className = 'bg-toast';
+                toastEl.setAttribute('role', 'status');
+                document.body.appendChild(toastEl);
+            }
+            toastEl.textContent = msg;
+            toastEl.classList.add('show');
+            clearTimeout(toastT);
+            toastT = setTimeout(function () { toastEl.classList.remove('show'); }, 4000);
+        }
+
+        function applyBg() {
+            btn.classList.toggle('off', bgOff);
+            btn.setAttribute('aria-pressed', String(!bgOff));
+            btn.title = bgOff ? 'Ligar fundo animado' : 'Desligar fundo animado';
+            btn.setAttribute('aria-label', btn.title);
+            if (bgOff) { cv.style.opacity = '0'; }
+            else { start(); startMonitor(); if (ready) cv.style.opacity = '1'; }
+            syncPause();
+        }
+        btn.addEventListener('click', function () {
+            bgOff = !bgOff;
+            // religou na mão depois que o site desligou sozinho: respeita a escolha e
+            // não desliga mais automaticamente (continua só simplificando)
+            if (!bgOff && wasAuto) forced = true;
+            if (bgOff) wasAuto = false;
             try {
-                worker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
-                worker.onmessage = function (e) { if (e.data && e.data.type === 'ready') onReady(); };
-                var off = cv.transferControlToOffscreen();
-                worker.postMessage({ type: 'init', canvas: off, w: d.w, h: d.h, dpr: d.dpr, reduce: reduce }, [off]);
-                send = function (m) { worker.postMessage(m); };
-            } catch (err) { worker = null; send = null; }
-        }
-        // 2) plano B: roda o mesmo motor na thread principal
-        if (!send && !cv.__transferred) {
-            var fake = { onmessage: null, postMessage: function (m) { if (m && m.type === 'ready') onReady(); } };
-            new Function('self', src)(fake);
-            send = function (m) { fake.onmessage({ data: m }); };
-            send({ type: 'init', canvas: cv, w: d.w, h: d.h, dpr: d.dpr, reduce: reduce });
-        }
+                localStorage.setItem('bg-off', bgOff ? '1' : '0');
+                localStorage.setItem('bg-auto', wasAuto ? '1' : '0');
+                if (forced) localStorage.setItem('bg-force', '1');
+            } catch (e) {}
+            applyBg();
+        });
 
+        function isPaused() {
+            return bgOff || document.hidden || (overlay && overlay.style.display === 'flex') || (tpOv && tpOv.style.display === 'block');
+        }
         function syncPause() {
-            send({ type: 'pause', v: document.hidden || (overlay && overlay.style.display === 'flex') || (tpOv && tpOv.style.display === 'block') });
+            if (!send) return;
+            send({ type: 'pause', v: isPaused() });
         }
         document.addEventListener('visibilitychange', syncPause);
         if (overlay && window.MutationObserver) {
@@ -2458,6 +2655,7 @@ self.onmessage = function (e) {
         }
 
         window.addEventListener('resize', function () {
+            if (!send) return;
             var n = dims();
             send({ type: 'resize', w: n.w, h: n.h, dpr: n.dpr });
         });
@@ -2466,10 +2664,13 @@ self.onmessage = function (e) {
         var mxx = -1, myy = -1, queued = false;
         function flushMouse() { queued = false; send({ type: 'm', x: mxx, y: myy }); }
         window.addEventListener('pointermove', function (e) {
+            if (!send || bgOff) return;
             mxx = e.clientX; myy = e.clientY;
             if (!queued) { queued = true; requestAnimationFrame(flushMouse); }
         }, { passive: true });
-        window.addEventListener('pointerleave', function () { mxx = myy = -1; send({ type: 'm', x: -1, y: -1 }); });
+        window.addEventListener('pointerleave', function () { if (!send) return; mxx = myy = -1; send({ type: 'm', x: -1, y: -1 }); });
+
+        applyBg();
     })();
     </script>
 
@@ -2556,7 +2757,14 @@ self.onmessage = function (e) {
         fxSetOS(detectOS());
 
         // ---------- dados da máquina -> textos da ficha ----------
-        const arr = (x) => (x == null || x === '' ? [] : Array.isArray(x) ? x : [x]);
+        // O Windows PowerShell 5.1 às vezes manda listas como {} (vazia) ou {"value":[...],"Count":n}
+        // em vez de [...]: normaliza tudo para array, senão {} vira "Sim" / "[object Object]" na ficha
+        const arr = (x) => {
+            if (x == null || x === '') return [];
+            if (Array.isArray(x)) return x;
+            if (typeof x === 'object') return 'value' in x ? arr(x.value) : Object.keys(x).length ? [x] : [];
+            return [x];
+        };
         const uniq = (a) => a.filter((v, i) => v && a.indexOf(v) === i);
         const BRANDS = [[/lenovo/i, 'Lenovo'], [/hewlett|^hp\b/i, 'HP'], [/dell/i, 'Dell'], [/apple/i, 'Apple'], [/asus/i, 'ASUS'],
                         [/acer/i, 'Acer'], [/samsung/i, 'Samsung'], [/microsoft/i, 'Microsoft'], [/positivo/i, 'Positivo'],
@@ -2880,6 +3088,105 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
             }
         }
         render();
+    })();
+    </script>
+
+    <script>
+    // --- TRAVA DA FICHA: só imprime depois que todos os testes foram feitos ---
+    (function () {
+        // áudio e touchpad se marcam sozinhos (classe .done); os outros dependem do checkbox
+        var TESTS = [
+            { nome: 'Teclado e mouse', ok: function () { return byChk('ok-keyboard'); } },
+            { nome: 'WebCam', ok: function () { return byChk('ok-webcam'); } },
+            { nome: 'Microfone', ok: function () { return byChk('ok-mic'); } },
+            { nome: 'Áudio (esquerdo, estéreo e direito)', ok: function () { return allDone(['result-left', 'result-stereo', 'result-right']); } },
+            { nome: 'Touchpad (cobertura, rolagem e pinça)', ok: function () { return byChk('no-touchpad') || allDone(['tp-card-cov', 'tp-card-scroll', 'tp-card-pinch']); } }
+        ];
+        function byChk(id) { var el = document.getElementById(id); return !!(el && el.checked); }
+        function allDone(ids) {
+            return ids.every(function (id) { var el = document.getElementById(id); return el && el.classList.contains('done'); });
+        }
+
+        var free = false;
+        try { free = sessionStorage.getItem('fx-free') === '1'; } catch (e) {}
+
+        var gate = document.getElementById('fx-gate');
+        var list = document.getElementById('fx-gate-list');
+        var printBtn = document.querySelector('.fx-print');
+
+        function pending() { return free ? [] : TESTS.filter(function (t) { return !t.ok(); }); }
+        function update() {
+            var falta = pending();
+            printBtn.classList.toggle('locked', falta.length > 0);
+            printBtn.title = falta.length ? 'Conclua todos os testes para imprimir' : 'Imprimir ficha';
+            gate.hidden = falta.length === 0;
+            list.innerHTML = TESTS.map(function (t) {
+                var ok = t.ok();
+                return '<div class="audio-result' + (ok ? ' done' : '') + '"><span class="dot-status">' + (ok ? '✓' : '○') + '</span> ' + t.nome + ' — ' + (ok ? 'Testado' : 'Não testado') + '</div>';
+            }).join('');
+        }
+
+        var printFicha = window.fxPrint;
+        window.fxPrint = function () {
+            update();
+            if (pending().length) {
+                gate.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            return printFicha.apply(this, arguments);
+        };
+
+        // atualiza quando um checkbox muda ou quando áudio/touchpad marcam um resultado
+        // "Não possui touchpad" conta como teste feito e desativa o botão do teste
+        var noTp = document.getElementById('no-touchpad');
+        noTp.addEventListener('change', function () {
+            noTp.closest('.card').classList.toggle('tp-none', noTp.checked);
+            var btn = document.getElementById('tp-start');
+            btn.disabled = noTp.checked;
+            btn.textContent = noTp.checked ? 'Sem touchpad' : 'Iniciar Teste';
+            syncTpField();
+        });
+
+        // campo "Touchpad" da ficha: marcado = sempre "Não possui" (a palavra do técnico vale mais que a
+        // detecção automática); ao desmarcar, tira só esse texto
+        var NO_TP = 'Não possui';
+        function syncTpField() {
+            var f = document.getElementById('fx-touchpad');
+            if (!f) return;
+            var v = f.value.trim();
+            if (noTp.checked && v !== NO_TP) f.value = NO_TP;
+            else if (!noTp.checked && v === NO_TP) f.value = '';
+            else return;
+            f.dispatchEvent(new Event('input', { bubbles: true })); // salva como edição normal da ficha
+        }
+        // quando a ficha é redesenhada (comando do terminal / nova ficha), aplica de novo
+        var fxSt = document.getElementById('fx-status');
+        if (fxSt && window.MutationObserver) new MutationObserver(syncTpField).observe(fxSt, { childList: true });
+
+        ['ok-keyboard', 'ok-webcam', 'ok-mic', 'no-touchpad'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) el.addEventListener('change', update);
+        });
+        if (window.MutationObserver) {
+            var mo = new MutationObserver(update);
+            ['result-left', 'result-stereo', 'result-right', 'tp-card-cov', 'tp-card-scroll', 'tp-card-pinch'].forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el) mo.observe(el, { attributes: true, attributeFilter: ['class'] });
+            });
+        }
+        update();
+
+        // atalho de técnico: digitar o nome no console (F12) e dar Enter libera a ficha nesta aba
+        Object.defineProperty(window, atob('R2VuZ2Fy'), {
+            configurable: true,
+            enumerable: false,
+            get: function () {
+                free = true;
+                try { sessionStorage.setItem('fx-free', '1'); } catch (e) {}
+                update();
+                return '✓ Ficha liberada';
+            }
+        });
     })();
     </script>
 
