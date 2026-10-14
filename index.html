@@ -1799,6 +1799,7 @@
         // falhas no touchpad aparecem como rastro que para, engasga ou pula.
         const TP_COLS = 32, TP_ROWS = 20;   // tamanho da grade a preencher
         const TP_RATIO = 1.6;               // proporção da área (largura / altura), parecida com um touchpad
+        const TP_W = 480;                   // largura FIXA da área (px), igual em qualquer tela: o dedo percorre sempre a mesma distância
         const TP_GLITCH = 400;              // movimentos maiores que isso num único evento são ignorados (bug conhecido de alguns navegadores)
         const tpOverlay = document.getElementById('tp-overlay');
         const tpCanvas = document.getElementById('tp-canvas');
@@ -1815,7 +1816,8 @@
             const W = window.innerWidth, H = window.innerHeight;
             tpCanvas.width = tpTrail.width = Math.round(W * tpDpr);
             tpCanvas.height = tpTrail.height = Math.round(H * tpDpr);
-            let w = Math.min(W - 48, (H - 140) * TP_RATIO);
+            // tamanho fixo; só encolhe se a janela for menor que a área
+            let w = Math.min(TP_W, W - 48, (H - 140) * TP_RATIO);
             let h = w / TP_RATIO;
             tpArea = { x: (W - w) / 2, y: (H - h) / 2 + 24, w: w, h: h };
             tpRedrawTrail();
@@ -1837,11 +1839,15 @@
             for (let i = 0; i < tpSegs.length; i += 4) tpDrawSeg(tpSegs[i], tpSegs[i + 1], tpSegs[i + 2], tpSegs[i + 3]);
         }
         function tpMark(u, v) {
-            const c = Math.min(TP_COLS - 1, Math.floor(u * TP_COLS)), r = Math.min(TP_ROWS - 1, Math.floor(v * TP_ROWS));
+            // limita nas duas pontas: na borda, o arredondamento pode dar -0,00000001 -> célula -1, que não
+            // existe na grade e era contada de novo a cada movimento (cobertura passava de 100%)
+            const c = Math.max(0, Math.min(TP_COLS - 1, Math.floor(u * TP_COLS)));
+            const r = Math.max(0, Math.min(TP_ROWS - 1, Math.floor(v * TP_ROWS)));
+            if (!(c >= 0 && r >= 0)) return; // NaN
             const i = r * TP_COLS + c;
             if (!tpCells[i]) { tpCells[i] = 1; tpVisited++; }
         }
-        function tpCoverage() { return Math.round(tpVisited / tpCells.length * 100); }
+        function tpCoverage() { return Math.min(100, Math.round(tpVisited / tpCells.length * 100)); }
 
         function tpRender() {
             tpRaf = requestAnimationFrame(tpRender);
@@ -2679,7 +2685,6 @@ self.onmessage = function (e) {
     // O comando roda no terminal da máquina, coleta as informações e abre este site com os dados
     // no próprio link (#ficha=...). Nada passa por servidor. Aqui os dados viram a ficha.
     (function () {
-        const RAW = 'https://raw.githubusercontent.com/yC0D3X/Fichas/main/';
         const STORE = 'ficha-v1', STORE_TEC = 'ficha-tecnico';
 
         // Layout da ficha (igual à folha em papel). Para mudar um campo, mexa só aqui.
@@ -2744,12 +2749,11 @@ self.onmessage = function (e) {
             const p = ((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || '').toLowerCase();
             return /win/.test(p) ? 'win' : 'unix';
         }
+        // Comando curto: o arquivo f.html do site (ycodex.xyz/f) serve para os dois terminais,
+        // baixa o script certo do GitHub e abre a ficha em https://ycodex.xyz/
+        const CMDS = { win: 'irm ycodex.xyz/f | iex', unix: 'curl -sL ycodex.xyz/f | sh' };
         window.fxSetOS = function (os) {
-            const site = location.href.split('#')[0];
-            const cmd = os === 'win'
-                ? `$ycSite='${site.replace(/'/g, "''")}'; irm ${RAW}ficha.ps1 | iex`
-                : `curl -fsSL ${RAW}ficha.sh | bash -s -- '${site.replace(/'/g, "'\\''")}'`;
-            document.getElementById('fx-cmd').textContent = cmd;
+            document.getElementById('fx-cmd').textContent = CMDS[os];
             document.getElementById('fx-cmd-tag').textContent = os === 'win' ? 'WINDOWS' : 'MAC / LINUX';
             document.getElementById('fx-cmd-meta').innerHTML = '<span class="dot">●</span>' + (os === 'win' ? 'PowerShell' : 'Terminal');
             document.querySelectorAll('.fx-os button').forEach((b) => b.classList.toggle('on', b.dataset.os === os));
