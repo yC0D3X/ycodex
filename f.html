@@ -1,0 +1,16 @@
+echo `# <#` >/dev/null
+# yCODEX - Ficha Tecnica: comando curto, o mesmo endereco para todos os sistemas
+#   Windows (PowerShell):  irm ycodex.xyz/f | iex
+#   macOS / Linux:         curl -sL ycodex.xyz/f | sh
+# Este arquivo e lido tanto pelo sh quanto pelo PowerShell. A primeira linha abre um
+# comentario de bloco do PowerShell, que so fecha depois do "exit": o sh roda o trecho
+# abaixo e sai; o PowerShell pula esse trecho e roda o que vem depois.
+# NAO escrever o fechamento do comentario do PowerShell (cerquilha + maior) nesta parte.
+# Arquivo com quebras LF (o sh nao aceita CRLF) e so ASCII.
+RAW="${YC_RAW:-https://raw.githubusercontent.com/yC0D3X/Fichas/main}"
+curl -fsSL "$RAW/ficha.sh" | bash -s -- "${YC_SITE:-https://ycodex.xyz/}"
+exit
+#> > $null
+$ycRaw = if ($ycRaw) { $ycRaw } else { 'https://raw.githubusercontent.com/yC0D3X/Fichas/main' }
+if (-not $ycSite) { $ycSite = 'https://ycodex.xyz/' }
+irm "$ycRaw/ficha.ps1" | iex
