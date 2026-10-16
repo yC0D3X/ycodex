@@ -3020,6 +3020,7 @@ body { background: #6b6b6b; color: #000; font: 11pt/1.25 Arial, Helvetica, sans-
 .bar button.on { background: #fff; color: #000; border-color: #fff; font-weight: bold; }
 .bar .tip { margin-left: 12px; opacity: .75; }
 .bar .warn { color: #ffb347; font-weight: bold; margin-left: 12px; }
+.bar #net { margin-left: 12px; background: #2f81f7; border-color: #2f81f7; font-weight: bold; }
 .sheet { background: #fff; margin: 0 auto; padding: 12mm; width: 210mm; height: 297mm; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,.45); }
 body.land .sheet { width: 297mm; height: 210mm; }
 header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #000; padding-bottom: 2mm; margin-bottom: 1mm; }
@@ -3047,7 +3048,7 @@ small { color: #444; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 </style></head><body>
-<div class="bar"><span>Folha:</span><button data-o="portrait">Retrato</button><button data-o="landscape">Paisagem</button><span class="warn" id="warn" hidden>Não cabe numa folha só</span><span class="tip">Ctrl+P para imprimir</span></div>
+<div class="bar"><span>Folha:</span><button data-o="portrait">Retrato</button><button data-o="landscape">Paisagem</button><span class="warn" id="warn" hidden>Não cabe numa folha só</span><span class="tip">Ctrl+P para imprimir</span><button id="net" hidden title="Imprime direto na impressora da rede, sem instalar nada (a janela do comando precisa estar aberta)">Imprimir na rede</button></div>
 <div class="sheet"><header><h1>Ficha Técnica</h1><span>yCODEX</span></header><div id="content"></div></div>
 <script>
 var L = ${JSON.stringify({ portrait, landscape }).replace(/</g, '\u003c')};
@@ -3055,12 +3056,24 @@ function setO(o) {
   document.getElementById('content').innerHTML = L[o];
   document.body.classList.toggle('land', o === 'landscape');
   document.getElementById('pg').textContent = '@page { size: A4 ' + o + '; margin: 12mm; }';
-  document.querySelectorAll('.bar button').forEach(function (b) { b.classList.toggle('on', b.dataset.o === o); });
+  document.querySelectorAll('.bar button[data-o]').forEach(function (b) { b.classList.toggle('on', b.dataset.o === o); });
   var sh = document.querySelector('.sheet');
   document.getElementById('warn').hidden = sh.scrollHeight <= sh.clientHeight + 1;
   try { localStorage.setItem('ficha-print-orient', o); } catch (e) {}
 }
-document.querySelectorAll('.bar button').forEach(function (b) { b.onclick = function () { setO(b.dataset.o); }; });
+document.querySelectorAll('.bar button[data-o]').forEach(function (b) { b.onclick = function () { setO(b.dataset.o); }; });
+// Windows sem impressora instalada: o comando da ficha (janela do PowerShell aberta) entrega a folha
+// direto na impressora da rede. A folha vai no link (depois do #) para http://127.0.0.1, só esta máquina.
+var net = document.getElementById('net');
+net.hidden = !/Windows/.test(navigator.userAgent);
+net.onclick = function () {
+  var c = document.documentElement.cloneNode(true);
+  c.querySelectorAll('script, .bar').forEach(function (e) { e.remove(); });
+  var bin = unescape(encodeURIComponent('<!doctype html>' + c.outerHTML));
+  var b64 = btoa(bin).split('+').join('-').split('/').join('_').replace(/=+$/, '');
+  var land = document.body.classList.contains('land') ? 'L' : 'P';
+  window.open('http://127.0.0.1:8631/imprimir#' + land + b64, '_blank');
+};
 var saved = 'portrait'; try { saved = localStorage.getItem('ficha-print-orient') || 'portrait'; } catch (e) {}
 setO(saved === 'landscape' ? 'landscape' : 'portrait');
 <\/script>
