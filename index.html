@@ -1032,6 +1032,44 @@
         .fx-print:hover { opacity: 1; filter: drop-shadow(0 0 6px rgba(255,255,255,0.45)); }
         .fx-print:active { transform: translateY(1px); }
         .fx-actions .standard-btn { width: auto; margin-top: 0; padding: 10px 20px; }
+        /* envio da ficha para o sistema do cliente (webhook) */
+        .fx-send { border: 1px solid var(--border-strong); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; text-align: left; }
+        .fx-send[hidden] { display: none; }
+        .fx-send-title { margin: 0; font-size: 0.85rem; font-weight: 600; color: var(--text); }
+        .fx-send p { margin: 0; font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+        .fx-send code, .fx-doc code { font: 0.74rem ui-monospace, Menlo, Consolas, monospace; color: var(--text); }
+        .fx-send-url {
+            width: 100%; background: #0b0b0b; color: var(--text); border: 1px solid var(--border-strong); border-radius: 8px;
+            padding: 10px 12px; font: 0.8rem ui-monospace, Menlo, Consolas, monospace; outline: none;
+        }
+        .fx-send-url:focus { border-color: #fff; }
+        .fx-send-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .fx-send .fx-btn { padding: 10px 16px; }
+        .fx-btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border-strong); }
+        .fx-btn.ghost:hover { background: #151515; }
+        .fx-btn.locked, .fx-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .fx-send-msg { font: 0.75rem/1.5 ui-monospace, Menlo, Consolas, monospace; color: var(--muted); white-space: pre-wrap; word-break: break-word; }
+        .fx-send-msg:empty { display: none; }
+        .fx-send-msg.ok { color: #b6ffb6; }
+        .fx-send-msg.err { color: var(--danger); }
+        .fx-doc { font-size: 0.78rem; color: var(--muted); }
+        .fx-doc summary { cursor: pointer; width: max-content; }
+        .fx-doc summary:hover { color: #fff; }
+        .fx-doc-body { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+        .fx-doc h3 { margin: 6px 0 0; font-size: 0.8rem; font-weight: 600; color: var(--text); }
+        .fx-doc ul { margin: 0; padding-left: 18px; line-height: 1.6; }
+        .fx-doc pre {
+            margin: 0; background: #0b0b0b; border: 1px solid var(--border); border-radius: 8px; padding: 10px;
+            overflow-x: auto; font: 0.72rem/1.5 ui-monospace, Menlo, Consolas, monospace; color: var(--text);
+        }
+        #fx-send-sample { max-height: 260px; overflow: auto; }
+        .fx-vars-wrap { max-height: 300px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; }
+        .fx-vars { width: 100%; border-collapse: collapse; font-size: 0.74rem; }
+        .fx-vars th, .fx-vars td { text-align: left; padding: 5px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        .fx-vars th { position: sticky; top: 0; background: #101010; font-weight: 600; color: var(--text); }
+        .fx-vars td:first-child { white-space: nowrap; }
+        .fx-vars td:last-child { color: var(--text); word-break: break-word; }
+        .fx-vars tr:last-child td { border-bottom: 0; }
         @media (max-width: 560px) {
             .fx-field + .fx-field, .fx-field + .fx-checks, .fx-checks + .fx-field, .fx-checks + .fx-checks { border-left: 0; border-top: 1px solid var(--border); }
         }
@@ -1348,6 +1386,13 @@
         :root[data-theme="light"] .fx-cb input:focus-visible + .box { outline-color: #111; }
         :root[data-theme="light"] .fx-print { color: #111; }
         :root[data-theme="light"] .fx-print:hover { filter: drop-shadow(0 0 6px rgba(0,0,0,0.25)); }
+        :root[data-theme="light"] .fx-send-url { background: #ffffff; }
+        :root[data-theme="light"] .fx-send-url:focus { border-color: #111; }
+        :root[data-theme="light"] .fx-btn.ghost:hover { background: #f0f0f0; }
+        :root[data-theme="light"] .fx-send-msg.ok { color: var(--ok); }
+        :root[data-theme="light"] .fx-doc summary:hover { color: #111; }
+        :root[data-theme="light"] .fx-doc pre { background: #f5f5f5; }
+        :root[data-theme="light"] .fx-vars th { background: #f0f0f0; }
     </style>
 </head>
 <body class="pl-loading">
@@ -1866,16 +1911,49 @@
                 <form class="fx-sheet" id="fx-sheet" autocomplete="off" onsubmit="return false"></form>
 
                 <div class="fx-gate" id="fx-gate" hidden>
-                    <p class="fx-gate-title">Conclua todos os testes e preencha o técnico para imprimir a ficha:</p>
+                    <p class="fx-gate-title">Conclua todos os testes e preencha o técnico para imprimir ou enviar a ficha:</p>
                     <div class="audio-results" id="fx-gate-list"></div>
                     <button type="button" class="standard-btn stop" onclick="switchTab('tester')">Ir para os testes</button>
                 </div>
 
                 <div class="fx-actions">
+                    <button type="button" class="fx-print fx-hook" id="fx-send-toggle" onclick="fxSendToggle()" aria-label="Enviar para o seu sistema" title="Enviar para o seu sistema (webhook)" aria-expanded="false" aria-controls="fx-send">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
                     <button type="button" class="fx-print" onclick="fxPrint()" aria-label="Imprimir ficha" title="Imprimir ficha">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7" rx="1"/><line x1="17.5" y1="11.5" x2="17.51" y2="11.5"/></svg>
                     </button>
                     <button type="button" class="standard-btn stop" onclick="fxClear()">Nova ficha</button>
+                </div>
+
+                <div class="fx-send" id="fx-send" hidden>
+                    <p class="fx-send-title">Enviar a ficha para o seu sistema</p>
+                    <p>Cole o endereço do seu sistema. Ao clicar em Enviar, todas as informações desta ficha vão para ele em JSON, e do seu lado você usa os campos que quiser. O endereço fica salvo só neste navegador.</p>
+                    <input type="url" id="fx-send-url" class="fx-send-url" spellcheck="false" autocomplete="off" placeholder="https://seu-sistema.com.br/webhook" aria-label="Endereço do seu sistema">
+                    <div class="fx-send-row">
+                        <button type="button" class="fx-btn" id="fx-send-go" onclick="fxSend()">Enviar</button>
+                        <button type="button" class="fx-btn ghost" onclick="fxSendPreview()">Pré-visualizar</button>
+                    </div>
+                    <div class="fx-send-msg" id="fx-send-msg" aria-live="polite"></div>
+                    <details class="fx-doc">
+                        <summary>Como funciona (documentação)</summary>
+                        <div class="fx-doc-body">
+                            <h3>1. O que o seu sistema recebe</h3>
+                            <p>Um <code>POST</code> com <code>Content-Type: application/json</code> no endereço colado acima. O corpo traz todos os campos da ficha. Com os dados da ficha atual, fica assim:</p>
+                            <pre id="fx-send-sample"></pre>
+                            <h3>2. Campos</h3>
+                            <p>Use os nomes abaixo para pegar cada informação do seu lado. Os valores são sempre texto: marcações vêm como <code>"Sim"</code> ou <code>"Não"</code>, a data como <code>AAAA-MM-DD</code> e campo em branco como <code>""</code>. O que vai é o que está na ficha na hora do envio, já com as edições do técnico.</p>
+                            <div class="fx-vars-wrap"><table class="fx-vars"><thead><tr><th>Campo no JSON</th><th>Na ficha</th><th>Valor agora</th></tr></thead><tbody id="fx-vars"></tbody></table></div>
+                            <h3>3. Quando dá para enviar</h3>
+                            <p>Igual à impressão: só depois de concluir todos os testes e preencher o nome do técnico. Use "Pré-visualizar" para conferir o que será enviado sem enviar nada.</p>
+                            <h3>4. Liberar o site no seu servidor (CORS)</h3>
+                            <p>O envio sai do navegador, então o seu servidor precisa autorizar o <code>ycodex.xyz</code>. Ele deve responder à requisição <code>OPTIONS</code> e ao <code>POST</code> com:</p>
+                            <pre>Access-Control-Allow-Origin: https://ycodex.xyz
+Access-Control-Allow-Methods: POST, OPTIONS
+Access-Control-Allow-Headers: Content-Type</pre>
+                            <p>Sem essa liberação, o navegador bloqueia o envio e aparece um erro de rede aqui. Se o seu sistema pede uma chave de acesso, coloque-a no próprio endereço, por exemplo <code>https://seu-sistema.com.br/webhook?chave=SUA_CHAVE</code>.</p>
+                        </div>
+                    </details>
                 </div>
             </div>
         </div>
@@ -3284,6 +3362,97 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
             w.focus();
         };
 
+        // ---------- envio para o sistema do cliente (webhook) ----------
+        // O cliente cola o endereço do sistema dele; o navegador manda a ficha inteira em JSON (POST)
+        // e do lado dele ele usa os campos que quiser. O endereço fica só neste navegador.
+        const STORE_SEND = 'ficha-envio';
+        // [campo, rótulo] na ordem da ficha; o Destino vira também um campo só
+        const FIELDS = [], DESTINO = [];
+        {
+            let sec = '';
+            for (const row of LAYOUT) {
+                if (typeof row === 'string') { sec = row; continue; }
+                for (const f of row) for (const [id, label] of (f.cb || [f])) {
+                    FIELDS.push([id, label]);
+                    if (sec === 'Destino') DESTINO.push([id, label]);
+                }
+            }
+            FIELDS.push(['destino', 'Destino marcado']);
+        }
+        function sendData() {
+            const out = {};
+            for (const [id] of FIELDS) {
+                const el = byId(id);
+                out[id] = !el ? '' : el.type === 'checkbox' ? (el.checked ? 'Sim' : 'Não') : el.value.trim();
+            }
+            out.destino = DESTINO.filter(([id]) => byId(id).checked).map(([, label]) => label).join(', ');
+            return out;
+        }
+
+        const panel = document.getElementById('fx-send');
+        const urlEl = document.getElementById('fx-send-url');
+        const msgEl = document.getElementById('fx-send-msg');
+        const goBtn = document.getElementById('fx-send-go');
+        const sendMsg = (t, kind) => { msgEl.textContent = t; msgEl.className = 'fx-send-msg' + (kind ? ' ' + kind : ''); };
+        try { urlEl.value = localStorage.getItem(STORE_SEND) || ''; } catch (e) {}
+        urlEl.addEventListener('input', () => { try { localStorage.setItem(STORE_SEND, urlEl.value.trim()); } catch (e) {} });
+
+        // endereço colado -> URL pronta (ou erro explicando o que está errado)
+        function sendUrl() {
+            const raw = urlEl.value.trim();
+            if (!raw) throw new Error('Cole o endereço do seu sistema no campo acima.');
+            let u;
+            try { u = new URL(raw); } catch (e) { throw new Error('Endereço inválido: ' + raw + '\nCole o endereço completo, começando com https://'); }
+            const local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(u.hostname);
+            if (u.protocol !== 'https:' && !(u.protocol === 'http:' && local)) throw new Error('O endereço precisa começar com https://');
+            return u.href;
+        }
+
+        function renderDocs() {
+            const v = sendData();
+            document.getElementById('fx-send-sample').textContent = JSON.stringify(v, null, 2);
+            document.getElementById('fx-vars').innerHTML = FIELDS.map(([id, label]) =>
+                `<tr><td><code>${esc(id)}</code></td><td>${esc(label)}</td><td>${esc(v[id])}</td></tr>`
+            ).join('');
+        }
+
+        window.fxSendToggle = function () {
+            panel.hidden = !panel.hidden;
+            document.getElementById('fx-send-toggle').setAttribute('aria-expanded', String(!panel.hidden));
+            if (panel.hidden) return;
+            renderDocs();
+            panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            urlEl.focus();
+        };
+        // a documentação mostra o valor de agora
+        panel.querySelector('.fx-doc').addEventListener('toggle', (e) => { if (e.target.open) renderDocs(); });
+        window.fxSendPreview = function () {
+            let url;
+            try { url = sendUrl(); } catch (e) { sendMsg(e.message, 'err'); return; }
+            sendMsg(`Pré-visualização (nada foi enviado):\n\nPOST ${url}\nContent-Type: application/json\n\n${JSON.stringify(sendData(), null, 2)}`);
+        };
+        window.fxSend = async function () {
+            let url;
+            try { url = sendUrl(); } catch (e) { sendMsg(e.message, 'err'); return; }
+            goBtn.disabled = true;
+            sendMsg('Enviando…');
+            const ctl = new AbortController();
+            const timer = setTimeout(() => ctl.abort(), 20000);
+            try {
+                const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sendData()), signal: ctl.signal });
+                const txt = (await res.text().catch(() => '')).trim().slice(0, 500);
+                if (res.ok) sendMsg(`✓ Ficha enviada (HTTP ${res.status})` + (txt ? `\nResposta: ${txt}` : ''), 'ok');
+                else sendMsg(`O seu servidor recusou o envio (HTTP ${res.status}).` + (txt ? `\nResposta: ${txt}` : ''), 'err');
+            } catch (e) {
+                sendMsg(e.name === 'AbortError'
+                    ? 'O servidor não respondeu em 20 segundos.'
+                    : 'Não foi possível enviar. O mais provável é que o servidor não tenha liberado o ycodex.xyz (CORS) ou que o endereço esteja errado. Veja "Liberar o site no seu servidor" na documentação abaixo.', 'err');
+            } finally {
+                clearTimeout(timer);
+                goBtn.disabled = false;
+            }
+        };
+
         // outra aba do site recebeu dados novos -> atualiza esta também
         window.addEventListener('storage', (e) => { if (e.key === STORE || e.key === STORE_TEC) { state = load() || empty(); render(); } });
 
@@ -3344,17 +3513,20 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
 
         var gate = document.getElementById('fx-gate');
         var list = document.getElementById('fx-gate-list');
-        var printBtn = document.querySelector('.fx-print');
+        var printBtn = document.querySelector('.fx-print:not(.fx-hook)');
+        var sendBtn = document.getElementById('fx-send-go');
 
         function pending() { return free ? [] : TESTS.filter(function (t) { return !t.ok(); }); }
         function update() {
             var falta = pending();
             printBtn.classList.toggle('locked', falta.length > 0);
             printBtn.title = falta.length ? 'Conclua todos os testes e preencha o técnico para imprimir' : 'Imprimir ficha';
+            sendBtn.classList.toggle('locked', falta.length > 0);
+            sendBtn.title = falta.length ? 'Conclua todos os testes e preencha o técnico para enviar' : 'Enviar ficha';
             gate.hidden = falta.length === 0;
             // falta só o técnico: o botão leva para o campo em vez de ir para os testes
             var soCampo = falta.length > 0 && falta.every(function (t) { return t.campo; });
-            gateTitle.textContent = soCampo ? 'Preencha o nome do técnico para imprimir a ficha:' : 'Conclua todos os testes e preencha o técnico para imprimir a ficha:';
+            gateTitle.textContent = soCampo ? 'Preencha o nome do técnico para imprimir ou enviar a ficha:' : 'Conclua todos os testes e preencha o técnico para imprimir ou enviar a ficha:';
             gateBtn.textContent = soCampo ? 'Preencher técnico' : 'Ir para os testes';
             list.innerHTML = TESTS.map(function (t) {
                 var ok = t.ok();
@@ -3375,17 +3547,21 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
             else switchTab('tester');
         };
 
-        var printFicha = window.fxPrint;
-        window.fxPrint = function () {
-            update();
-            var falta = pending();
-            if (falta.length) {
-                if (falta.every(function (t) { return t.campo; })) irParaTecnico();
-                else gate.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                return;
-            }
-            return printFicha.apply(this, arguments);
-        };
+        // imprimir e enviar passam pela mesma trava
+        function travado(fn) {
+            return function () {
+                update();
+                var falta = pending();
+                if (falta.length) {
+                    if (falta.every(function (t) { return t.campo; })) irParaTecnico();
+                    else gate.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return;
+                }
+                return fn.apply(this, arguments);
+            };
+        }
+        window.fxPrint = travado(window.fxPrint);
+        window.fxSend = travado(window.fxSend);
 
         // atualiza quando um checkbox muda ou quando áudio/touchpad marcam um resultado
         // "Não possui touchpad" conta como teste feito e desativa o botão do teste
