@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- tema: escuro é o padrão; o claro só entra se a pessoa escolheu (aplicado antes de desenhar, sem piscar) -->
+    <script>try { if (localStorage.getItem('theme') === 'light') document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {}</script>
     <title>yCODEX</title>
     <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAADdElEQVR4nKWXPYhdRRTHf7PvZaMWG4wKFgmaEBU1JH4UIa2pJFrFwkpELTSiYBEiYhHbpEulqKBoIxYKaQSxsFBWJYvBEEEQDEIQUTCgJrt57/0s7hnu7M299314YLh3vs7/zH9mzjmTmEPUFL+pbE8pTaJvAExSSpNi/AAYp5ScB6sJvKQO+vob9RvUlQ7j5wdv1Leru9X71AfVvdG+rD6nrqpX1d/Vr9Sj6vJCRmRw9QH1bfUXN8u/6kH1gPp9tH2jvtUY9516h5qaC+oDH8T32ULRBfUd9UX1cfV29TF1I/pH6svqzvgfBRuqX8ZWbjKglRI1pZRUtwGfAh8BZ4ARsAO4B9gN3AU8FdPGVAfO+B9mdVGWgD0ppZ/VpXxQ+xhIUVbUI+oZ9S/bZdLRXvatq3eWW9sHvhTge9VzDYXjoHzDbikNGkV9LevtBS8tVL8urM+KrhXKX1JfKYDaJI9/OnQOe8Ez/fH9IVZ6tQH8m3okxnzYY0BuW1UHznEDhvE92qLwA+u9fDTaxy3geRv+Ue8tmZ3ViMzCM+qb6qvqvqJ/l3opgNoMGIfBT8b4Tk86t1g5lQs9q8/b9XGM3/J/wAbqUN0a9QPWHrHr4GWj1mLuYnGgNCK+z1t7ti7wLPkM7I+5s+9/B/hrheI22ru24XjMn379esCfKJT2eb1SMkNfLMSAtSu+xSq0zrryLNnQy+qtWWcTp8+qQWQxLwC3UQWYeVaRgAmwAjzchdeq0NoHbAdenwO0KTniHSyMmm4AQEppBFwGTgDfUoXX/hC6WcbF/0PxvS4vbKZbyToXOAwcA34CHgHeiPGzGjGIArAr9I77JpRR8HTjQJ21cig/Rn3aYRypn6t/W92cX63jS7tTKsB3hIIc9/N93mcViDLAtJN/k3o+6qdC93XxoM05DKlPcIqyDlyiSsGgI5ULGQPXohwD7gZOx8qnpmGZhU8aKzuh7glW+ujPzLzvIq7X2vncrL5rlZCcjPqqdYjton+kvmdEP6sUrNcF90Yp6xtxP3A+msdU1ylvTykbwGHgD+AKcDGltLEoEzkO5NUcCkbmkXNWL6lkx+mfKU4XTGwBDlH5hf3ATmAbsJWKlSvAn8BF4CzwGbBG9WBtfZzOnCjY8ZhQbwSWw4D1lNL6rDrnMiDAEpU3TBTP8JZxg2ljsvwHYTpKYnwGIwwAAAAASUVORK5CYII=">
     <link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,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">
@@ -1178,6 +1180,174 @@
         /* conteúdo entra suave depois do loader */
         .brand, .container { transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
         body.pl-loading .brand, body.pl-loading .container { opacity: 0; transform: translateY(14px); }
+
+        /* Botão de tema (sol / lua), em cima do botão do fundo animado. Usa o mesmo visual do .bg-toggle */
+        .bg-toggle.theme-toggle { bottom: 124px; }
+        .theme-toggle .ic-sun, .theme-toggle .ic-moon { transition: opacity 0.25s ease, transform 0.35s var(--ease, ease); transform-origin: 50% 50%; }
+        .theme-toggle .ic-moon { opacity: 0; transform: rotate(-60deg) scale(0.6); }
+        :root[data-theme="light"] .theme-toggle .ic-sun { opacity: 0; transform: rotate(60deg) scale(0.6); }
+        :root[data-theme="light"] .theme-toggle .ic-moon { opacity: 1; transform: none; }
+
+        /* =====================================================================
+           MODO CLARO (o escuro acima continua sendo o padrão).
+           Só sobrescreve cores; os testes em tela cheia (cores e touchpad) seguem escuros.
+           ===================================================================== */
+        :root[data-theme="light"] {
+            color-scheme: light;
+            --bg: #f5f5f5;
+            --surface: #ffffff;
+            --surface-2: #f0f0f0;
+            --border: #e2e2e2;
+            --border-strong: #cfcfcf;
+            --text: #111111;
+            --muted: #666666;
+            --dim: #9a9a9a;
+            --accent: #111111;
+            --good: #111111;
+            --ok: #1a7f2e;
+        }
+        /* telas de teste em tela cheia: mantêm as cores do modo escuro */
+        :root[data-theme="light"] #tp-overlay, :root[data-theme="light"] #screen-test-overlay {
+            color-scheme: dark;
+            --text: #ffffff; --muted: #8a8a8a; --dim: #555; --border: #1f1f1f; --border-strong: #2a2a2a;
+        }
+        /* fundo animado: o mesmo desenho com as cores invertidas (fundo #f5f5f5, letras escuras) */
+        :root[data-theme="light"] #ascii-bg { filter: invert(0.96); }
+
+        /* pré-loader */
+        :root[data-theme="light"] #preloader { background: var(--bg); }
+        :root[data-theme="light"] .pl-bunny { background: linear-gradient(to top right, rgb(255,110,180), #111111); -webkit-background-clip: text; background-clip: text; }
+        :root[data-theme="light"] .pl-logo { color: #111; }
+        :root[data-theme="light"] .pl-logo-box::after { background: #111; }
+
+        /* cards e caixas */
+        :root[data-theme="light"] .card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(250,250,250,0.9) 100%);
+            box-shadow: 0 20px 40px -24px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+        :root[data-theme="light"] .log-box,
+        :root[data-theme="light"] .cmd-row,
+        :root[data-theme="light"] .dl-row { background: #ffffff; }
+        :root[data-theme="light"] .extra-keys-container,
+        :root[data-theme="light"] .keyboard-wrapper,
+        :root[data-theme="light"] .audio-results { background: #f7f7f7; }
+        :root[data-theme="light"] .log-line .highlight { color: #111; }
+        :root[data-theme="light"] .log-line .code-highlight { text-decoration-color: rgba(0,0,0,0.25); }
+        /* <strong style="color:#fff"> nos textos de introdução */
+        :root[data-theme="light"] .cmd-intro strong { color: var(--text) !important; }
+
+        /* teclado */
+        :root[data-theme="light"] .key {
+            background: #ffffff; color: #222; border-color: #d6d6d6;
+            box-shadow: 0 2px 0 #c9c9c9, inset 0 1px 0 rgba(255,255,255,0.9);
+        }
+        :root[data-theme="light"] .key.pressing { background: #111 !important; color: #fff !important; border-color: #111; box-shadow: none; }
+        :root[data-theme="light"] .key.tested { background: #e8f6ea; border-color: #9fd3a8; color: var(--ok); box-shadow: 0 2px 0 #c9c9c9; }
+        :root[data-theme="light"] #MouseLeft, :root[data-theme="light"] #MouseRight { background: #f0f0f0; }
+
+        /* áudio e microfone */
+        :root[data-theme="light"] .meter-container { background-color: #ececec; }
+        :root[data-theme="light"] #mic-bar { background: linear-gradient(90deg, #111 0%, #777 100%); }
+        :root[data-theme="light"] .audio-btn { color: #111; background: #ffffff; }
+        :root[data-theme="light"] .audio-btn:hover { background: #f0f0f0; border-color: #b5b5b5; }
+        :root[data-theme="light"] .volume-row input[type="range"] { accent-color: #111; }
+        :root[data-theme="light"] .audio-result.done,
+        :root[data-theme="light"] .audio-result.done .dot-status { color: var(--ok); }
+
+        /* botões principais (brancos no escuro -> pretos no claro) */
+        :root[data-theme="light"] .container button.standard-btn,
+        :root[data-theme="light"] .st-auto-btn,
+        :root[data-theme="light"] .copy-btn,
+        :root[data-theme="light"] .dl-btn,
+        :root[data-theme="light"] .fx-btn,
+        :root[data-theme="light"] .audio-btn.playing { background: #111; color: #fff; border-color: #111; }
+        :root[data-theme="light"] .container button.standard-btn:hover,
+        :root[data-theme="light"] .st-auto-btn:hover,
+        :root[data-theme="light"] .copy-btn:hover,
+        :root[data-theme="light"] .dl-btn:hover,
+        :root[data-theme="light"] .fx-btn:hover,
+        :root[data-theme="light"] .audio-btn.playing:hover { background: #333; }
+        :root[data-theme="light"] .container button.standard-btn.stop { background: transparent; color: #111; border-color: #cfcfcf; }
+        :root[data-theme="light"] .container button.standard-btn.stop:hover { background: #ececec; border-color: #111; }
+        :root[data-theme="light"] .dl-btn.disabled { background: transparent; color: var(--muted); border-color: var(--border-strong); }
+        :root[data-theme="light"] .copy-btn.copied { background: #e6e6e6; color: #111; border-color: #bdbdbd; }
+
+        /* comandos e downloads */
+        :root[data-theme="light"] .cmd-tag,
+        :root[data-theme="light"] .dl-name { color: #111; background: #f0f0f0; }
+        :root[data-theme="light"] .cmd-code,
+        :root[data-theme="light"] .dl-desc { color: #222; }
+        :root[data-theme="light"] .dl-meta.official .dot { color: #0a8fc4; }
+
+        /* logo e menu (vidro claro) */
+        :root[data-theme="light"] .brand-logo,
+        :root[data-theme="light"] .dock {
+            border-color: rgba(0,0,0,0.08);
+            background:
+                linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.55) 45%, rgba(255,255,255,0.75) 100%),
+                rgba(245,245,245,0.6);
+            box-shadow: 0 12px 32px -14px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.05);
+        }
+        :root[data-theme="light"] .brand-logo-btn { background: rgba(0,0,0,0.04); box-shadow: inset 0 1px 0 rgba(255,255,255,0.7); }
+        @media (hover: hover) {
+            :root[data-theme="light"] .brand-logo:hover .brand-logo-btn { background: rgba(0,0,0,0.08); }
+            :root[data-theme="light"] .nav-btn:hover, :root[data-theme="light"] .dock-toggle:hover { background: rgba(0,0,0,0.08); color: #111; }
+        }
+        :root[data-theme="light"] .brand-logo:active .brand-logo-btn { background: rgba(0,0,0,0.12); }
+        :root[data-theme="light"] .brand-logo-text { color: #111; -webkit-text-stroke-color: var(--bg); animation-name: logoGlowLight; }
+        @keyframes logoGlowLight {
+            0%, 100% { text-shadow: 0 0 8px rgba(0,0,0,0.12), 0 0 22px rgba(0,0,0,0.06); }
+            50%      { text-shadow: 0 0 12px rgba(0,0,0,0.22), 0 0 32px rgba(0,0,0,0.12); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            :root[data-theme="light"] .brand-logo-text { animation: none; text-shadow: 0 0 10px rgba(0,0,0,0.15); }
+        }
+        :root[data-theme="light"] .nav-btn,
+        :root[data-theme="light"] .dock-toggle { background: rgba(0,0,0,0.04); box-shadow: inset 0 1px 0 rgba(255,255,255,0.7); color: #666; }
+        :root[data-theme="light"] .nav-btn.active { background: rgba(0,0,0,0.10); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12); color: #111; }
+        :root[data-theme="light"] .nav-btn:active, :root[data-theme="light"] .dock-toggle:active { background: rgba(0,0,0,0.14); }
+        :root[data-theme="light"] .nav-btn:focus-visible, :root[data-theme="light"] .dock-toggle:focus-visible { outline-color: #111; }
+        :root[data-theme="light"] .dock-toggle { color: #111; }
+        :root[data-theme="light"] .dock.open .dock-toggle { background: rgba(0,0,0,0.08); }
+        :root[data-theme="light"] .dock-icon i { background: #111; }
+
+        /* botões flutuantes (tema, fundo animado, lupa) e seus avisos */
+        :root[data-theme="light"] .zoom-lens,
+        :root[data-theme="light"] .bg-toggle {
+            border-color: rgba(0,0,0,0.15);
+            background:
+                linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.8) 100%),
+                rgba(245,245,245,0.85);
+            box-shadow: 0 8px 24px -10px rgba(0,0,0,0.25), 0 0 0 4px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255,255,255,0.9);
+        }
+        :root[data-theme="light"] .zoom-lens:hover, :root[data-theme="light"] .zoom-lens.dragging,
+        :root[data-theme="light"] .bg-toggle:hover { border-color: rgba(0,0,0,0.35); }
+        :root[data-theme="light"] .bg-toggle:focus-visible { outline-color: #111; }
+        :root[data-theme="light"] .bg-toggle.off { color: #9a9a9a; }
+        :root[data-theme="light"] .bg-toggle.off .bg-slash { color: #111; }
+        :root[data-theme="light"] .bg-toast,
+        :root[data-theme="light"] .zoom-label { background: rgba(255,255,255,0.95); }
+
+        /* ficha técnica */
+        :root[data-theme="light"] .fx-os { background: #f0f0f0; }
+        :root[data-theme="light"] .fx-os button:hover { color: #111; }
+        :root[data-theme="light"] .fx-os button.on { background: #111; color: #fff; }
+        :root[data-theme="light"] .fx-status.ok { color: var(--ok); }
+        :root[data-theme="light"] .fx-status.ok .fx-dot { background: var(--ok); }
+        :root[data-theme="light"] .fx-dot { background: #b0b0b0; }
+        :root[data-theme="light"] .fx-import summary:hover { color: #111; }
+        :root[data-theme="light"] .fx-import textarea { background: #ffffff; }
+        :root[data-theme="light"] .fx-section { background: #f0f0f0; }
+        :root[data-theme="light"] .fx-field input:focus { border-bottom-color: #111; }
+        :root[data-theme="light"] .fx-field input.auto { color: #000; }
+        :root[data-theme="light"] .fx-field input[type="date"] { color-scheme: light; }
+        :root[data-theme="light"] .fx-cb .box { border-color: #b5b5b5; background: #ffffff; }
+        :root[data-theme="light"] .fx-cb .box::after { border-color: #fff; }
+        :root[data-theme="light"] .fx-cb input:checked + .box { background: #111; border-color: #111; }
+        :root[data-theme="light"] .fx-cb input:checked ~ .lbl { color: #111; }
+        :root[data-theme="light"] .fx-cb input:focus-visible + .box { outline-color: #111; }
+        :root[data-theme="light"] .fx-print { color: #111; }
+        :root[data-theme="light"] .fx-print:hover { filter: drop-shadow(0 0 6px rgba(0,0,0,0.25)); }
     </style>
 </head>
 <body class="pl-loading">
@@ -1266,6 +1436,34 @@
     })();
     </script>
     <canvas id="ascii-bg" aria-hidden="true"></canvas>
+    <button class="bg-toggle theme-toggle" id="theme-toggle" type="button" title="Ativar modo claro" aria-label="Ativar modo claro">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <g class="ic-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></g>
+            <g class="ic-moon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></g>
+        </svg>
+    </button>
+    <script>
+    // --- TEMA: escuro (padrão) ou claro. O sol aparece no escuro (vai para o claro); a lua, no claro ---
+    (function () {
+        var root = document.documentElement, btn = document.getElementById('theme-toggle');
+        function sync() {
+            var light = root.getAttribute('data-theme') === 'light';
+            var t = light ? 'Ativar modo escuro' : 'Ativar modo claro';
+            btn.title = t;
+            btn.setAttribute('aria-label', t);
+        }
+        btn.addEventListener('click', function () {
+            var light = root.getAttribute('data-theme') !== 'light';
+            if (light) root.setAttribute('data-theme', 'light'); else root.removeAttribute('data-theme');
+            try { localStorage.setItem('theme', light ? 'light' : 'dark'); } catch (e) {}
+            sync();
+        });
+        // não registrar o clique no testador de mouse
+        btn.addEventListener('mousedown', function (e) { e.stopPropagation(); });
+        btn.addEventListener('mouseup', function (e) { e.stopPropagation(); });
+        sync();
+    })();
+    </script>
     <button class="bg-toggle" id="bg-toggle" type="button" aria-pressed="true" title="Desligar fundo animado" aria-label="Desligar fundo animado">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><line class="bg-slash" x1="3" y1="3" x2="21" y2="21"/></svg>
     </button>
@@ -1668,7 +1866,7 @@
                 <form class="fx-sheet" id="fx-sheet" autocomplete="off" onsubmit="return false"></form>
 
                 <div class="fx-gate" id="fx-gate" hidden>
-                    <p class="fx-gate-title">Conclua todos os testes para imprimir a ficha:</p>
+                    <p class="fx-gate-title">Conclua todos os testes e preencha o técnico para imprimir a ficha:</p>
                     <div class="audio-results" id="fx-gate-list"></div>
                     <button type="button" class="standard-btn stop" onclick="switchTab('tester')">Ir para os testes</button>
                 </div>
@@ -3131,7 +3329,10 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
             { nome: 'WebCam', ok: function () { return byChk('ok-webcam'); } },
             { nome: 'Microfone', ok: function () { return byChk('ok-mic'); } },
             { nome: 'Áudio (esquerdo, estéreo e direito)', ok: function () { return allDone(['result-left', 'result-stereo', 'result-right']); } },
-            { nome: 'Touchpad (cobertura, rolagem e pinça)', ok: function () { return byChk('no-touchpad') || allDone(['tp-card-cov', 'tp-card-scroll', 'tp-card-pinch']); } }
+            { nome: 'Touchpad (cobertura, rolagem e pinça)', ok: function () { return byChk('no-touchpad') || allDone(['tp-card-cov', 'tp-card-scroll', 'tp-card-pinch']); } },
+            // não é teste: o nome do técnico é obrigatório para imprimir
+            { nome: 'Nome do técnico', campo: 'fx-tecnico', sim: 'Preenchido', nao: 'Não preenchido',
+              ok: function () { var el = document.getElementById('fx-tecnico'); return !!(el && el.value.trim()); } }
         ];
         function byChk(id) { var el = document.getElementById(id); return !!(el && el.checked); }
         function allDone(ids) {
@@ -3149,19 +3350,38 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
         function update() {
             var falta = pending();
             printBtn.classList.toggle('locked', falta.length > 0);
-            printBtn.title = falta.length ? 'Conclua todos os testes para imprimir' : 'Imprimir ficha';
+            printBtn.title = falta.length ? 'Conclua todos os testes e preencha o técnico para imprimir' : 'Imprimir ficha';
             gate.hidden = falta.length === 0;
+            // falta só o técnico: o botão leva para o campo em vez de ir para os testes
+            var soCampo = falta.length > 0 && falta.every(function (t) { return t.campo; });
+            gateTitle.textContent = soCampo ? 'Preencha o nome do técnico para imprimir a ficha:' : 'Conclua todos os testes e preencha o técnico para imprimir a ficha:';
+            gateBtn.textContent = soCampo ? 'Preencher técnico' : 'Ir para os testes';
             list.innerHTML = TESTS.map(function (t) {
                 var ok = t.ok();
-                return '<div class="audio-result' + (ok ? ' done' : '') + '"><span class="dot-status">' + (ok ? '✓' : '○') + '</span> ' + t.nome + ' — ' + (ok ? 'Testado' : 'Não testado') + '</div>';
+                return '<div class="audio-result' + (ok ? ' done' : '') + '"><span class="dot-status">' + (ok ? '✓' : '○') + '</span> ' + t.nome + ' — ' + (ok ? (t.sim || 'Testado') : (t.nao || 'Não testado')) + '</div>';
             }).join('');
         }
+        function irParaTecnico() {
+            var el = document.getElementById('fx-tecnico');
+            if (!el) return;
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.focus();
+        }
+        var gateTitle = gate.querySelector('.fx-gate-title');
+        var gateBtn = gate.querySelector('.standard-btn');
+        gateBtn.onclick = function () {
+            var falta = pending();
+            if (falta.length && falta.every(function (t) { return t.campo; })) irParaTecnico();
+            else switchTab('tester');
+        };
 
         var printFicha = window.fxPrint;
         window.fxPrint = function () {
             update();
-            if (pending().length) {
-                gate.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            var falta = pending();
+            if (falta.length) {
+                if (falta.every(function (t) { return t.campo; })) irParaTecnico();
+                else gate.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
             }
             return printFicha.apply(this, arguments);
@@ -3198,6 +3418,8 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
             var el = document.getElementById(id);
             if (el) el.addEventListener('change', update);
         });
+        var tec = document.getElementById('fx-tecnico');
+        if (tec) tec.addEventListener('input', update);
         if (window.MutationObserver) {
             var mo = new MutationObserver(update);
             ['result-left', 'result-stereo', 'result-right', 'tp-card-cov', 'tp-card-scroll', 'tp-card-pinch'].forEach(function (id) {
