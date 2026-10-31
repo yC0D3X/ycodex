@@ -709,10 +709,9 @@
                 <div class="fx-send" id="fx-send" hidden>
                     <p class="fx-send-title">Enviar a ficha para o seu sistema</p>
                     <p>Cole o endereço do seu sistema. Ao clicar em Enviar, todas as informações desta ficha vão para ele em JSON. Use o botão de <strong>chave 🔑</strong> para salvar e o <strong>QR</strong> para preencher pelo celular.</p>
-                    <form class="fx-send-form" onsubmit="return false" autocomplete="on">
-                        <input type="hidden" autocomplete="username" value="ycodex-webhook">
+                    <div class="fx-send-form">
                         <div class="fx-send-url-row">
-                            <input type="password" id="fx-send-url" class="fx-send-url" spellcheck="false" autocomplete="current-password" placeholder="https://seu-sistema.com.br/webhook?chave=..." aria-label="Endereço do webhook">
+                            <input type="password" id="fx-send-url" class="fx-send-url" spellcheck="false" autocomplete="off" placeholder="https://seu-sistema.com.br/webhook?chave=..." aria-label="Endereço do webhook">
                             <button type="button" class="fx-btn fx-eye-btn" id="fx-eye-btn" onclick="fxToggleKey()" aria-label="Mostrar/ocultar chave" title="Mostrar/ocultar">
                                 <svg id="fx-eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                             </button>
@@ -723,7 +722,7 @@
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="4" height="4"/><line x1="22" y1="14" x2="22" y2="14.01"/><line x1="22" y1="18" x2="22" y2="22"/><line x1="18" y1="22" x2="18" y2="22.01"/><rect x="5" y="5" width="2" height="2"/><rect x="17" y="5" width="2" height="2"/><rect x="5" y="17" width="2" height="2"/></svg>
                             </button>
                         </div>
-                    </form>
+                    </div>
                     <div class="fx-send-row">
                         <button type="button" class="fx-btn" id="fx-send-go" onclick="fxSend()">Enviar</button>
                         <button type="button" class="fx-btn ghost" onclick="fxSendPreview()">Pré-visualizar</button>
