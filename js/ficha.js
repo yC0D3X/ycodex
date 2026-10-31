@@ -472,19 +472,48 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
     };
 
     // --- Passkey (WebAuthn + largeBlob): salvar no celular, preencher via QR do sistema ---
+    // O largeBlob nem sempre funciona (iPhone pelo QR não devolve). Por isso a URL também vai no
+    // user.id da passkey (o "userHandle", que sempre volta no login). Limite do user.id: 64 bytes.
+    //   formato: 1 byte de versão + URL em UTF-8 (versão 1 = "https://" foi tirado para caber mais)
+    const UH_MAX = 64;
+    function urlToHandle(url) {
+        const https = url.startsWith('https://');
+        const body = new TextEncoder().encode(https ? url.slice(8) : url);
+        if (body.length + 1 > UH_MAX) return null;
+        const out = new Uint8Array(body.length + 1);
+        out[0] = https ? 1 : 2;
+        out.set(body, 1);
+        return out;
+    }
+    function handleToUrl(buf) {
+        const b = new Uint8Array(buf || []);
+        if (b.length < 2 || (b[0] !== 1 && b[0] !== 2)) return '';
+        let s;
+        try { s = new TextDecoder('utf-8', { fatal: true }).decode(b.slice(1)); } catch (e) { return ''; }
+        if (b[0] === 1) s = 'https://' + s;
+        try { new URL(s); return s; } catch (e) { return ''; }
+    }
+    function blobToUrl(buf) {
+        let s;
+        try { s = new TextDecoder('utf-8', { fatal: true }).decode(buf).trim(); } catch (e) { return ''; }
+        try { new URL(s); return s; } catch (e) { return ''; }
+    }
     window.fxSaveKey = async function () {
         if (!window.PublicKeyCredential) { alert('[DIAG] Navegador sem PublicKeyCredential'); return; }
         const raw = urlEl.value.trim();
         if (!raw) { sendMsg('Cole a chave do webhook no campo primeiro.', 'err'); return; }
+        try { new URL(raw); } catch (e) { sendMsg('Endereço inválido. Cole o endereço completo, começando com https://', 'err'); return; }
         const encoded = new TextEncoder().encode(raw);
+        const handle = urlToHandle(raw);
         const rpId = location.hostname;
+        let host = ''; try { host = new URL(raw).host; } catch (e) {}
         alert('[1/3] Criando passkey para rpId=' + rpId + ' (' + encoded.length + ' bytes)');
         try {
             const cred = await navigator.credentials.create({
                 publicKey: {
                     challenge: crypto.getRandomValues(new Uint8Array(32)),
                     rp: { id: rpId, name: 'yCODEX' },
-                    user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'webhook', displayName: 'Chave do webhook' },
+                    user: { id: handle || crypto.getRandomValues(new Uint8Array(16)), name: 'webhook ' + host, displayName: 'Webhook ' + host },
                     pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
                     authenticatorSelection: { residentKey: 'required', userVerification: 'required' },
                     extensions: { largeBlob: { support: 'preferred' } },
@@ -509,7 +538,8 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
                 alert('[3/3] largeBlob.written=' + written);
                 if (written) { sendMsg('✓ Passkey salva com a URL completa!', 'ok'); return; }
             }
-            sendMsg('✓ Passkey criada! (largeBlob=' + lbOk + ') URL será colada manualmente.', lbOk === false ? '' : 'ok');
+            if (handle) sendMsg('✓ Passkey salva com a URL completa!', 'ok');
+            else sendMsg('Passkey criada, mas este aparelho não guarda dados extras (largeBlob) e a URL tem mais de ' + (UH_MAX + 7) + ' caracteres, então ela não coube na passkey. Use uma URL mais curta.', 'err');
         } catch (e) {
             alert('[ERRO] ' + e.name + ': ' + e.message);
             sendMsg(e.name === 'NotAllowedError' ? 'Cancelado.' : 'Erro: ' + e.name + ' — ' + e.message, e.name === 'NotAllowedError' ? '' : 'err');
@@ -529,16 +559,18 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
                 }
             });
             const blob = cred.getClientExtensionResults()?.largeBlob?.blob;
+            // largeBlob primeiro; senão a URL guardada no userHandle. Passkeys antigas têm só bytes
+            // aleatórios no userHandle: essas são ignoradas (antes viravam lixo no campo).
             let url = '';
-            if (blob && blob.byteLength > 0) url = new TextDecoder().decode(blob);
-            else if (cred.response.userHandle && cred.response.userHandle.byteLength > 0) url = new TextDecoder().decode(cred.response.userHandle);
+            if (blob && blob.byteLength > 0) url = blobToUrl(blob);
+            if (!url) url = handleToUrl(cred.response.userHandle);
             if (url) {
                 urlEl.value = url;
                 urlEl.type = 'text';
                 urlEl.dispatchEvent(new Event('input', { bubbles: true }));
                 sendMsg('✓ Chave preenchida!', 'ok');
             } else {
-                sendMsg('Passkey encontrada, mas sem URL salva. Salve primeiro no celular (botão de chave).', 'err');
+                sendMsg('Passkey encontrada, mas sem URL salva (provavelmente foi criada antes desta correção). Apague essa passkey do yCODEX no celular e salve de novo pelo botão de chave.', 'err');
             }
         } catch (e) {
             sendMsg(e.name === 'NotAllowedError' ? 'Cancelado.' : 'Erro: ' + e.name + ' — ' + e.message, e.name === 'NotAllowedError' ? '' : 'err');
