@@ -471,6 +471,75 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
         btn.title = isPassword ? 'Ocultar' : 'Mostrar';
     };
 
+    // --- Passkey (WebAuthn + largeBlob): salvar no celular, preencher via QR do sistema ---
+    window.fxSaveKey = async function () {
+        if (!window.PublicKeyCredential) { sendMsg('Navegador sem suporte a chave de acesso.', 'err'); return; }
+        const raw = urlEl.value.trim();
+        if (!raw) { sendMsg('Cole a chave do webhook no campo primeiro.', 'err'); return; }
+        const encoded = new TextEncoder().encode(raw);
+        const rpId = location.hostname;
+        try {
+            sendMsg('Criando chave de acesso…');
+            const cred = await navigator.credentials.create({
+                publicKey: {
+                    challenge: crypto.getRandomValues(new Uint8Array(32)),
+                    rp: { id: rpId, name: 'yCODEX' },
+                    user: { id: encoded.length <= 64 ? encoded : crypto.getRandomValues(new Uint8Array(16)), name: 'webhook', displayName: 'Chave do webhook' },
+                    pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+                    authenticatorSelection: { residentKey: 'required', userVerification: 'preferred' },
+                    extensions: { largeBlob: { support: 'preferred' } },
+                    timeout: 120000
+                }
+            });
+            const lbOk = cred.getClientExtensionResults()?.largeBlob?.supported;
+            if (encoded.length > 64) {
+                if (!lbOk) { sendMsg('URL muito longa e este dispositivo não suporta largeBlob. Use uma URL mais curta.', 'err'); return; }
+                sendMsg('Salvando chave… (confirme novamente)');
+                const w = await navigator.credentials.get({
+                    publicKey: {
+                        challenge: crypto.getRandomValues(new Uint8Array(32)),
+                        rpId: rpId,
+                        allowCredentials: [{ id: cred.rawId, type: 'public-key' }],
+                        userVerification: 'preferred',
+                        extensions: { largeBlob: { write: encoded } },
+                        timeout: 120000
+                    }
+                });
+                if (!w.getClientExtensionResults()?.largeBlob?.written) { sendMsg('Não foi possível salvar a URL na chave. Tente novamente.', 'err'); return; }
+            }
+            sendMsg('✓ Chave salva! Em qualquer computador, clique no botão QR para preencher.', 'ok');
+        } catch (e) {
+            if (e.name !== 'NotAllowedError') sendMsg('Erro: ' + e.message, 'err');
+        }
+    };
+    window.fxPasskey = async function () {
+        if (!window.PublicKeyCredential) { sendMsg('Navegador sem suporte a chave de acesso.', 'err'); return; }
+        try {
+            const cred = await navigator.credentials.get({
+                publicKey: {
+                    challenge: crypto.getRandomValues(new Uint8Array(32)),
+                    rpId: location.hostname,
+                    userVerification: 'preferred',
+                    extensions: { largeBlob: { read: true } },
+                    timeout: 120000
+                }
+            });
+            const blob = cred.getClientExtensionResults()?.largeBlob?.blob;
+            let url = '';
+            if (blob && blob.byteLength > 0) url = new TextDecoder().decode(blob);
+            else if (cred.response.userHandle && cred.response.userHandle.byteLength > 0) url = new TextDecoder().decode(cred.response.userHandle);
+            if (url) {
+                urlEl.value = url;
+                urlEl.type = 'text';
+                urlEl.dispatchEvent(new Event('input', { bubbles: true }));
+                sendMsg('✓ Chave preenchida!', 'ok');
+            } else {
+                sendMsg('Chave encontrada, mas sem URL salva. Salve primeiro no celular.', 'err');
+            }
+        } catch (e) {
+            if (e.name !== 'NotAllowedError') sendMsg('Erro: ' + e.message, 'err');
+        }
+    };
 
     // endereço colado -> URL pronta (ou erro explicando o que está errado)
     function sendUrl() {

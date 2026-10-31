@@ -708,13 +708,19 @@
 
                 <div class="fx-send" id="fx-send" hidden>
                     <p class="fx-send-title">Enviar a ficha para o seu sistema</p>
-                    <p>Cole o endereço do seu sistema. Ao clicar em Enviar, todas as informações desta ficha vão para ele em JSON. Use o <strong>app Senhas</strong> do celular para salvar e preencher automaticamente.</p>
+                    <p>Cole o endereço do seu sistema. Ao clicar em Enviar, todas as informações desta ficha vão para ele em JSON. Use o botão de <strong>chave 🔑</strong> para salvar e o <strong>QR</strong> para preencher pelo celular.</p>
                     <form class="fx-send-form" onsubmit="return false" autocomplete="on">
                         <input type="hidden" autocomplete="username" value="ycodex-webhook">
                         <div class="fx-send-url-row">
                             <input type="password" id="fx-send-url" class="fx-send-url" spellcheck="false" autocomplete="current-password" placeholder="https://seu-sistema.com.br/webhook?chave=..." aria-label="Endereço do webhook">
                             <button type="button" class="fx-btn fx-eye-btn" id="fx-eye-btn" onclick="fxToggleKey()" aria-label="Mostrar/ocultar chave" title="Mostrar/ocultar">
                                 <svg id="fx-eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                            <button type="button" class="fx-btn fx-eye-btn" onclick="fxSaveKey()" aria-label="Salvar chave de acesso" title="Salvar chave no celular">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                            </button>
+                            <button type="button" class="fx-btn fx-eye-btn" onclick="fxPasskey()" aria-label="Preencher com chave de acesso" title="Preencher pelo celular (QR)">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="4" height="4"/><line x1="22" y1="14" x2="22" y2="14.01"/><line x1="22" y1="18" x2="22" y2="22"/><line x1="18" y1="22" x2="18" y2="22.01"/><rect x="5" y="5" width="2" height="2"/><rect x="17" y="5" width="2" height="2"/><rect x="5" y="17" width="2" height="2"/></svg>
                             </button>
                         </div>
                     </form>
@@ -740,8 +746,8 @@
 Access-Control-Allow-Methods: POST, OPTIONS
 Access-Control-Allow-Headers: Content-Type</pre>
                             <p>Sem essa liberação, o navegador bloqueia o envio e aparece um erro de rede aqui. Se o seu sistema pede uma chave de acesso, coloque-a no próprio endereço, por exemplo <code>https://seu-sistema.com.br/webhook?chave=SUA_CHAVE</code>.</p>
-                            <h3>5. Preencher pelo celular</h3>
-                            <p>Salve o endereço completo no <strong>app Senhas</strong> do celular (iCloud Keychain ou gerenciador de senhas). No iPhone: Ajustes → Senhas → + → site <code>ycodex.xyz</code>, senha = o endereço completo do webhook. Na próxima vez, basta tocar no campo e o sistema preenche automaticamente.</p>
+                            <h3>5. Preencher pelo celular (Passkey)</h3>
+                            <p>Cole a chave e clique no botão de <strong>chave (🔑)</strong> — o sistema cria uma chave de acesso no celular (uma vez só). Depois, em qualquer computador, clique no botão <strong>QR</strong> — o Windows abre o diálogo com QR Code. Escaneie com o celular, confirme com Face ID / Touch ID, e a chave preenche sozinha.</p>
                         </div>
                     </details>
                 </div>
