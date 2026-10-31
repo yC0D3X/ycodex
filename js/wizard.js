@@ -2,6 +2,7 @@
 (function () {
     var TOTAL = 5;
     var current = 0;
+    var maxReached = 0; // etapa mais avançada já aberta: dá para clicar em qualquer bolinha até ela
     var names = ['', 'Teclado & Mouse', 'Touchpad', 'Microfone', 'WebCam', 'Áudio'];
     var steps = document.querySelectorAll('#tab-tester .test-step');
 
@@ -12,7 +13,11 @@
         var html = '';
         for (var i = 1; i <= TOTAL; i++) {
             var cls = i < current ? 'done' : (i === current ? 'current' : '');
-            html += '<span class="wiz-dot ' + cls + '"></span>';
+            var pode = i <= maxReached && i !== current;
+            html += '<button type="button" class="wiz-dot ' + cls + '" data-step="' + i + '"' +
+                (pode ? '' : ' disabled') +
+                (i === current ? ' aria-current="step"' : '') +
+                ' title="Etapa ' + i + ' — ' + names[i] + '" aria-label="Ir para a etapa ' + i + ': ' + names[i] + '"></button>';
             if (i < TOTAL) html += '<span class="wiz-line"></span>';
         }
         bar.innerHTML = html;
@@ -22,6 +27,7 @@
     function showStep(n) {
         steps.forEach(function (s) { s.classList.toggle('active', +s.dataset.step === n); });
         current = n;
+        if (n > maxReached) maxReached = n;
         if (n >= 1 && n <= TOTAL) {
             renderProgress();
             // clona indicadores para a etapa ativa (cada step só tem os seus)
@@ -119,6 +125,19 @@
         var el = document.getElementById(id);
         if (el) obs.observe(el, { attributes: true, attributeFilter: ['class'] });
     });
+
+    // bolinhas clicáveis: volta (ou avança) para uma etapa já aberta
+    var progBar = document.getElementById('wiz-progress');
+    if (progBar) {
+        progBar.addEventListener('click', function (e) {
+            var dot = e.target.closest('.wiz-dot');
+            if (!dot || dot.disabled) return;
+            showStep(+dot.dataset.step);
+        });
+        // não registrar esses cliques no testador de mouse
+        progBar.addEventListener('mousedown', function (e) { e.stopPropagation(); });
+        progBar.addEventListener('mouseup', function (e) { e.stopPropagation(); });
+    }
 
     showStep(0);
 })();

@@ -1248,10 +1248,23 @@ button.standard-btn.stop:hover { background: #151515; border-color: #fff; }
 }
 .wiz-dot {
     width: 10px; height: 10px; border-radius: 50%; background: #333;
-    transition: background 0.3s, box-shadow 0.3s;
+    border: none; padding: 0; margin: 0; flex: none; font: inherit; color: inherit;
+    cursor: pointer; transition: background 0.3s, transform 0.15s;
 }
+.wiz-dot:disabled { cursor: default; }
+.wiz-dot:not(:disabled):hover { transform: scale(1.35); background: #888; }
+.wiz-dot:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 .wiz-dot.done { background: #555; }
-.wiz-dot.current { background: #fff; box-shadow: 0 0 8px rgba(255,255,255,0.4); }
+/* etapa atual: branca com um anel que se expande e some (pulse) */
+.wiz-dot.current { background: #fff; animation: wiz-dot-pulse 1.6s ease-out infinite; }
+@keyframes wiz-dot-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255,255,255,0.7); }
+    70%  { box-shadow: 0 0 0 10px rgba(255,255,255,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .wiz-dot.current { animation: none; box-shadow: 0 0 0 3px rgba(255,255,255,0.35); }
+}
 .wiz-line { width: 24px; height: 1px; background: #333; }
 .wiz-label { font-size: 0.75rem; color: var(--muted); text-align: center; margin-bottom: 8px; letter-spacing: 0.06em; }
 .wiz-next {
@@ -1737,7 +1750,14 @@ body.pl-loading .brand, body.pl-loading .container { opacity: 0; transform: tran
 :root[data-theme="light"] .wiz-start-btn:hover { opacity: 0.6; }
 :root[data-theme="light"] .wiz-dot { background: #d0d0d0; }
 :root[data-theme="light"] .wiz-dot.done { background: #999; }
-:root[data-theme="light"] .wiz-dot.current { background: #111; box-shadow: 0 0 8px rgba(0,0,0,0.25); }
+:root[data-theme="light"] .wiz-dot.current { background: #111; animation-name: wiz-dot-pulse-light; }
+:root[data-theme="light"] .wiz-dot:not(:disabled):hover { background: #666; }
+:root[data-theme="light"] .wiz-dot:focus-visible { outline-color: #111; }
+@keyframes wiz-dot-pulse-light {
+    0%   { box-shadow: 0 0 0 0 rgba(0,0,0,0.45); }
+    70%  { box-shadow: 0 0 0 10px rgba(0,0,0,0); }
+    100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); }
+}
 :root[data-theme="light"] .wiz-line { background: #d0d0d0; }
 :root[data-theme="light"] .wiz-next { background: none; color: #111; border: none; }
 :root[data-theme="light"] .wiz-next:hover { opacity: 0.6; }
@@ -1752,3 +1772,6 @@ body.pl-loading .brand, body.pl-loading .container { opacity: 0; transform: tran
 :root[data-theme="light"] .pv-placeholder { background: #f0f0f0; border-color: #ddd; color: #999; }
 :root[data-theme="light"] #pv-keyboard .key.tested { background: #2e7d32; border-color: #388e3c; color: #fff; box-shadow: 0 2px 0 #1b5e20; }
 :root[data-theme="light"] .pv-icon { filter: opacity(0.55); }
+@media (prefers-reduced-motion: reduce) {
+    :root[data-theme="light"] .wiz-dot.current { animation: none; box-shadow: 0 0 0 3px rgba(0,0,0,0.2); }
+}
