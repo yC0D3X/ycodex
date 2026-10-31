@@ -471,39 +471,50 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
         btn.title = isPassword ? 'Ocultar' : 'Mostrar';
     };
 
-    // --- QR code + relay ntfy.sh: celular escaneia, iOS Passwords preenche, chave chega aqui ---
-    let pairSSE = null;
-    window.fxToggleQR = function () {
-        const area = document.getElementById('fx-qr-area');
-        const btn = document.getElementById('fx-qr-btn');
-        if (!area.hidden) { area.hidden = true; btn.classList.remove('active'); if (pairSSE) { pairSSE.close(); pairSSE = null; } return; }
-        const topic = 'ycx-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
-        const pairUrl = 'https://ycodex.xyz/pair.html?t=' + encodeURIComponent(topic);
-        const container = document.getElementById('fx-qr-code');
-        container.innerHTML = '';
-        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-        new QRCode(container, { text: pairUrl, width: 220, height: 220, colorDark: isLight ? '#000000' : '#ffffff', colorLight: isLight ? '#f5f5f5' : '#181818', correctLevel: QRCode.CorrectLevel.M });
-        area.hidden = false;
-        btn.classList.add('active');
-        area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        document.getElementById('fx-qr-hint').textContent = 'Escaneie com o celular · aguardando chave…';
-        if (pairSSE) pairSSE.close();
-        pairSSE = new EventSource('https://ntfy.sh/' + topic + '/sse');
-        pairSSE.addEventListener('message', (e) => {
-            try {
-                const data = JSON.parse(e.data);
-                if (data.message) {
-                    urlEl.value = data.message;
-                    urlEl.type = 'text';
-                    urlEl.dispatchEvent(new Event('input', { bubbles: true }));
-                    document.getElementById('fx-qr-hint').textContent = '✓ Chave recebida!';
-                    btn.classList.remove('active');
-                    setTimeout(() => { area.hidden = true; }, 2000);
-                    pairSSE.close(); pairSSE = null;
-                    sendMsg('✓ Chave preenchida pelo celular.', 'ok');
+    // --- Passkey (WebAuthn): salvar chave no celular e preencher via QR do sistema ---
+    const PASSKEY_RP = 'ycodex.xyz';
+    window.fxPasskey = async function () {
+        if (!window.PublicKeyCredential) { sendMsg('Este navegador não suporta chaves de acesso (Passkey).', 'err'); return; }
+        try {
+            const cred = await navigator.credentials.get({
+                publicKey: {
+                    challenge: crypto.getRandomValues(new Uint8Array(32)),
+                    rpId: PASSKEY_RP,
+                    userVerification: 'preferred',
+                    timeout: 120000
                 }
-            } catch (_) {}
-        });
+            });
+            if (cred.response.userHandle) {
+                urlEl.value = new TextDecoder().decode(cred.response.userHandle);
+                urlEl.type = 'text';
+                urlEl.dispatchEvent(new Event('input', { bubbles: true }));
+                sendMsg('✓ Chave preenchida!', 'ok');
+            }
+        } catch (e) {
+            if (e.name !== 'NotAllowedError') sendMsg('Erro: ' + e.message, 'err');
+        }
+    };
+    window.fxSaveKey = async function () {
+        if (!window.PublicKeyCredential) { sendMsg('Este navegador não suporta chaves de acesso (Passkey).', 'err'); return; }
+        const raw = urlEl.value.trim();
+        if (!raw) { sendMsg('Cole a chave do webhook no campo acima primeiro.', 'err'); return; }
+        const encoded = new TextEncoder().encode(raw);
+        if (encoded.length > 64) { sendMsg('URL muito longa para chave de acesso (máx. ~64 caracteres). Use uma URL mais curta ou cole manualmente.', 'err'); return; }
+        try {
+            await navigator.credentials.create({
+                publicKey: {
+                    challenge: crypto.getRandomValues(new Uint8Array(32)),
+                    rp: { id: PASSKEY_RP, name: 'yCODEX' },
+                    user: { id: encoded, name: 'webhook', displayName: 'Chave do webhook' },
+                    pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+                    authenticatorSelection: { residentKey: 'required', userVerification: 'preferred' },
+                    timeout: 120000
+                }
+            });
+            sendMsg('✓ Chave salva! Em qualquer computador, clique no botão QR para preencher.', 'ok');
+        } catch (e) {
+            if (e.name !== 'NotAllowedError') sendMsg('Erro ao salvar: ' + e.message, 'err');
+        }
     };
 
     // endereço colado -> URL pronta (ou erro explicando o que está errado)
