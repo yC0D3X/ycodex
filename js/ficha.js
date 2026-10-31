@@ -473,48 +473,52 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
 
     // --- Passkey (WebAuthn + largeBlob): salvar no celular, preencher via QR do sistema ---
     window.fxSaveKey = async function () {
-        if (!window.PublicKeyCredential) { sendMsg('Navegador sem suporte a chave de acesso.', 'err'); return; }
+        if (!window.PublicKeyCredential) { alert('[DIAG] Navegador sem PublicKeyCredential'); return; }
         const raw = urlEl.value.trim();
         if (!raw) { sendMsg('Cole a chave do webhook no campo primeiro.', 'err'); return; }
         const encoded = new TextEncoder().encode(raw);
         const rpId = location.hostname;
+        alert('[1/3] Criando passkey para rpId=' + rpId + ' (' + encoded.length + ' bytes)');
         try {
-            sendMsg('Criando chave de acesso…');
             const cred = await navigator.credentials.create({
                 publicKey: {
                     challenge: crypto.getRandomValues(new Uint8Array(32)),
                     rp: { id: rpId, name: 'yCODEX' },
-                    user: { id: encoded.length <= 64 ? encoded : crypto.getRandomValues(new Uint8Array(16)), name: 'webhook', displayName: 'Chave do webhook' },
+                    user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'webhook', displayName: 'Chave do webhook' },
                     pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
-                    authenticatorSelection: { residentKey: 'required', userVerification: 'preferred' },
+                    authenticatorSelection: { residentKey: 'required', userVerification: 'required' },
                     extensions: { largeBlob: { support: 'preferred' } },
                     timeout: 120000
                 }
             });
-            const lbOk = cred.getClientExtensionResults()?.largeBlob?.supported;
-            if (encoded.length > 64) {
-                if (!lbOk) { sendMsg('URL muito longa e este dispositivo não suporta largeBlob. Use uma URL mais curta.', 'err'); return; }
-                sendMsg('Salvando chave… (confirme novamente)');
+            const ext = cred.getClientExtensionResults();
+            const lbOk = ext?.largeBlob?.supported;
+            alert('[2/3] Passkey criada! largeBlob=' + lbOk + ' rawId=' + cred.rawId.byteLength + 'B');
+            if (lbOk) {
                 const w = await navigator.credentials.get({
                     publicKey: {
                         challenge: crypto.getRandomValues(new Uint8Array(32)),
                         rpId: rpId,
                         allowCredentials: [{ id: cred.rawId, type: 'public-key' }],
-                        userVerification: 'preferred',
+                        userVerification: 'required',
                         extensions: { largeBlob: { write: encoded } },
                         timeout: 120000
                     }
                 });
-                if (!w.getClientExtensionResults()?.largeBlob?.written) { sendMsg('Não foi possível salvar a URL na chave. Tente novamente.', 'err'); return; }
+                const written = w.getClientExtensionResults()?.largeBlob?.written;
+                alert('[3/3] largeBlob.written=' + written);
+                if (written) { sendMsg('✓ Passkey salva com a URL completa!', 'ok'); return; }
             }
-            sendMsg('✓ Chave salva! Em qualquer computador, clique no botão QR para preencher.', 'ok');
+            sendMsg('✓ Passkey criada! (largeBlob=' + lbOk + ') URL será colada manualmente.', lbOk === false ? '' : 'ok');
         } catch (e) {
-            if (e.name !== 'NotAllowedError') sendMsg('Erro: ' + e.message, 'err');
+            alert('[ERRO] ' + e.name + ': ' + e.message);
+            sendMsg(e.name === 'NotAllowedError' ? 'Cancelado.' : 'Erro: ' + e.name + ' — ' + e.message, e.name === 'NotAllowedError' ? '' : 'err');
         }
     };
     window.fxPasskey = async function () {
         if (!window.PublicKeyCredential) { sendMsg('Navegador sem suporte a chave de acesso.', 'err'); return; }
         try {
+            sendMsg('Abrindo diálogo de chave de acesso…');
             const cred = await navigator.credentials.get({
                 publicKey: {
                     challenge: crypto.getRandomValues(new Uint8Array(32)),
@@ -534,10 +538,10 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
                 urlEl.dispatchEvent(new Event('input', { bubbles: true }));
                 sendMsg('✓ Chave preenchida!', 'ok');
             } else {
-                sendMsg('Chave encontrada, mas sem URL salva. Salve primeiro no celular.', 'err');
+                sendMsg('Passkey encontrada, mas sem URL salva. Salve primeiro no celular (botão de chave).', 'err');
             }
         } catch (e) {
-            if (e.name !== 'NotAllowedError') sendMsg('Erro: ' + e.message, 'err');
+            sendMsg(e.name === 'NotAllowedError' ? 'Cancelado.' : 'Erro: ' + e.name + ' — ' + e.message, e.name === 'NotAllowedError' ? '' : 'err');
         }
     };
 
