@@ -471,78 +471,75 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
         btn.title = isPassword ? 'Ocultar' : 'Mostrar';
     };
 
-    // --- Passkey (WebAuthn + largeBlob): salvar no celular, preencher via QR do sistema ---
-    // O largeBlob nem sempre funciona (iPhone pelo QR não devolve). Por isso a URL também vai no
-    // user.id da passkey (o "userHandle", que sempre volta no login). Limite do user.id: 64 bytes.
-    //   formato: 1 byte de versão + URL em UTF-8 (versão 1 = "https://" foi tirado para caber mais)
-    const UH_MAX = 64;
-    function urlToHandle(url) {
-        const https = url.startsWith('https://');
-        const body = new TextEncoder().encode(https ? url.slice(8) : url);
-        if (body.length + 1 > UH_MAX) return null;
-        const out = new Uint8Array(body.length + 1);
-        out[0] = https ? 1 : 2;
-        out.set(body, 1);
-        return out;
+    // --- Passkey: salvar a URL no celular e preencher em qualquer computador pelo QR ---
+    // A passkey só guarda 64 bytes (user.id / "userHandle"), pouco para uma URL. Então:
+    //   salvar: sorteia um código (16 bytes) e uma senha (32 bytes), criptografa a URL (AES-GCM)
+    //           aqui no aparelho e guarda só o texto criptografado no cofre (Cloudflare Worker,
+    //           ycodex.xyz/api/chave/<código>). A passkey leva código + senha.
+    //   ler:    a passkey devolve código + senha -> busca no cofre -> descriptografa -> URL.
+    // O cofre nunca vê a URL nem a senha. Sem limite de tamanho de URL.
+    // Formato do userHandle: [3] + código(16) + senha(32). Versões 1 e 2 = URL curta direto no
+    // userHandle (passkeys salvas antes do cofre), ainda aceitas na leitura.
+    const COFRE = '/api/chave/';
+    const b64u = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const unb64u = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
+    const isUrl = (s) => { try { new URL(s); return true; } catch (e) { return false; } };
+    const aesKey = (raw, uso) => crypto.subtle.importKey('raw', raw, 'AES-GCM', false, [uso]);
+
+    async function guardarNoCofre(url) {
+        const id = crypto.getRandomValues(new Uint8Array(16));
+        const senha = crypto.getRandomValues(new Uint8Array(32));
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await aesKey(senha, 'encrypt'), new TextEncoder().encode(url)));
+        const pacote = new Uint8Array(iv.length + ct.length);
+        pacote.set(iv); pacote.set(ct, iv.length);
+        const res = await fetch(COFRE + b64u(id), { method: 'PUT', body: b64u(pacote), cache: 'no-store' });
+        if (!res.ok) throw new Error('O cofre recusou a chave (HTTP ' + res.status + ').');
+        const handle = new Uint8Array(49);
+        handle[0] = 3; handle.set(id, 1); handle.set(senha, 17);
+        return handle;
     }
-    function handleToUrl(buf) {
+    async function lerDoCofre(b) {
+        const res = await fetch(COFRE + b64u(b.slice(1, 17)), { cache: 'no-store' });
+        if (res.status === 404) throw new Error('Essa chave não existe mais no cofre. Salve de novo pelo botão de chave.');
+        if (!res.ok) throw new Error('O cofre não respondeu (HTTP ' + res.status + ').');
+        const pacote = unb64u((await res.text()).trim());
+        const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: pacote.slice(0, 12) }, await aesKey(b.slice(17, 49), 'decrypt'), pacote.slice(12));
+        return new TextDecoder().decode(pt);
+    }
+    async function handleToUrl(buf) {
         const b = new Uint8Array(buf || []);
+        if (b[0] === 3 && b.length === 49) return lerDoCofre(b);
         if (b.length < 2 || (b[0] !== 1 && b[0] !== 2)) return '';
         let s;
         try { s = new TextDecoder('utf-8', { fatal: true }).decode(b.slice(1)); } catch (e) { return ''; }
         if (b[0] === 1) s = 'https://' + s;
-        try { new URL(s); return s; } catch (e) { return ''; }
+        return isUrl(s) ? s : '';
     }
-    function blobToUrl(buf) {
-        let s;
-        try { s = new TextDecoder('utf-8', { fatal: true }).decode(buf).trim(); } catch (e) { return ''; }
-        try { new URL(s); return s; } catch (e) { return ''; }
-    }
+
     window.fxSaveKey = async function () {
-        if (!window.PublicKeyCredential) { alert('[DIAG] Navegador sem PublicKeyCredential'); return; }
+        if (!window.PublicKeyCredential) { sendMsg('Navegador sem suporte a chave de acesso.', 'err'); return; }
         const raw = urlEl.value.trim();
         if (!raw) { sendMsg('Cole a chave do webhook no campo primeiro.', 'err'); return; }
-        try { new URL(raw); } catch (e) { sendMsg('Endereço inválido. Cole o endereço completo, começando com https://', 'err'); return; }
-        const encoded = new TextEncoder().encode(raw);
-        const handle = urlToHandle(raw);
-        const rpId = location.hostname;
-        let host = ''; try { host = new URL(raw).host; } catch (e) {}
-        alert('[1/3] Criando passkey para rpId=' + rpId + ' (' + encoded.length + ' bytes)');
+        if (!isUrl(raw)) { sendMsg('Endereço inválido. Cole o endereço completo, começando com https://', 'err'); return; }
+        const host = new URL(raw).host;
         try {
-            const cred = await navigator.credentials.create({
+            sendMsg('Guardando a chave criptografada…');
+            const handle = await guardarNoCofre(raw);
+            sendMsg('Confirme a criação da chave de acesso…');
+            await navigator.credentials.create({
                 publicKey: {
                     challenge: crypto.getRandomValues(new Uint8Array(32)),
-                    rp: { id: rpId, name: 'yCODEX' },
-                    user: { id: handle || crypto.getRandomValues(new Uint8Array(16)), name: 'webhook ' + host, displayName: 'Webhook ' + host },
+                    rp: { id: location.hostname, name: 'yCODEX' },
+                    user: { id: handle, name: 'webhook ' + host, displayName: 'Webhook ' + host },
                     pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
                     authenticatorSelection: { residentKey: 'required', userVerification: 'required' },
-                    extensions: { largeBlob: { support: 'preferred' } },
                     timeout: 120000
                 }
             });
-            const ext = cred.getClientExtensionResults();
-            const lbOk = ext?.largeBlob?.supported;
-            alert('[2/3] Passkey criada! largeBlob=' + lbOk + ' rawId=' + cred.rawId.byteLength + 'B');
-            if (lbOk) {
-                const w = await navigator.credentials.get({
-                    publicKey: {
-                        challenge: crypto.getRandomValues(new Uint8Array(32)),
-                        rpId: rpId,
-                        allowCredentials: [{ id: cred.rawId, type: 'public-key' }],
-                        userVerification: 'required',
-                        extensions: { largeBlob: { write: encoded } },
-                        timeout: 120000
-                    }
-                });
-                const written = w.getClientExtensionResults()?.largeBlob?.written;
-                alert('[3/3] largeBlob.written=' + written);
-                if (written) { sendMsg('✓ Passkey salva com a URL completa!', 'ok'); return; }
-            }
-            if (handle) sendMsg('✓ Passkey salva com a URL completa!', 'ok');
-            else sendMsg('Passkey criada, mas este aparelho não guarda dados extras (largeBlob) e a URL tem mais de ' + (UH_MAX + 7) + ' caracteres, então ela não coube na passkey. Use uma URL mais curta.', 'err');
+            sendMsg('✓ Passkey salva com a URL completa!', 'ok');
         } catch (e) {
-            alert('[ERRO] ' + e.name + ': ' + e.message);
-            sendMsg(e.name === 'NotAllowedError' ? 'Cancelado.' : 'Erro: ' + e.name + ' — ' + e.message, e.name === 'NotAllowedError' ? '' : 'err');
+            sendMsg(e.name === 'NotAllowedError' ? 'Cancelado.' : 'Erro: ' + e.message, e.name === 'NotAllowedError' ? '' : 'err');
         }
     };
     window.fxPasskey = async function () {
@@ -554,26 +551,21 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
                     challenge: crypto.getRandomValues(new Uint8Array(32)),
                     rpId: location.hostname,
                     userVerification: 'preferred',
-                    extensions: { largeBlob: { read: true } },
                     timeout: 120000
                 }
             });
-            const blob = cred.getClientExtensionResults()?.largeBlob?.blob;
-            // largeBlob primeiro; senão a URL guardada no userHandle. Passkeys antigas têm só bytes
-            // aleatórios no userHandle: essas são ignoradas (antes viravam lixo no campo).
-            let url = '';
-            if (blob && blob.byteLength > 0) url = blobToUrl(blob);
-            if (!url) url = handleToUrl(cred.response.userHandle);
+            sendMsg('Buscando a chave…');
+            const url = await handleToUrl(cred.response.userHandle);
             if (url) {
                 urlEl.value = url;
                 urlEl.type = 'text';
                 urlEl.dispatchEvent(new Event('input', { bubbles: true }));
                 sendMsg('✓ Chave preenchida!', 'ok');
             } else {
-                sendMsg('Passkey encontrada, mas sem URL salva (provavelmente foi criada antes desta correção). Apague essa passkey do yCODEX no celular e salve de novo pelo botão de chave.', 'err');
+                sendMsg('Passkey encontrada, mas sem URL salva (foi criada numa versão antiga). Apague essa passkey do yCODEX no celular e salve de novo pelo botão de chave.', 'err');
             }
         } catch (e) {
-            sendMsg(e.name === 'NotAllowedError' ? 'Cancelado.' : 'Erro: ' + e.name + ' — ' + e.message, e.name === 'NotAllowedError' ? '' : 'err');
+            sendMsg(e.name === 'NotAllowedError' ? 'Cancelado.' : 'Erro: ' + e.message, e.name === 'NotAllowedError' ? '' : 'err');
         }
     };
 
