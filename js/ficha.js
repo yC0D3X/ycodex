@@ -471,6 +471,23 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
         btn.title = isPassword ? 'Ocultar' : 'Mostrar';
     };
 
+    // --- QR code da chave ---
+    let qrInstance = null;
+    window.fxToggleQR = function () {
+        const area = document.getElementById('fx-qr-area');
+        const btn = document.getElementById('fx-qr-btn');
+        if (!area.hidden) { area.hidden = true; btn.classList.remove('active'); return; }
+        const raw = urlEl.value.trim();
+        if (!raw) { sendMsg('Digite a chave primeiro para gerar o QR Code.', 'err'); return; }
+        const container = document.getElementById('fx-qr-code');
+        container.innerHTML = '';
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        qrInstance = new QRCode(container, { text: raw, width: 220, height: 220, colorDark: isLight ? '#000000' : '#ffffff', colorLight: isLight ? '#f5f5f5' : '#181818', correctLevel: QRCode.CorrectLevel.M });
+        area.hidden = false;
+        btn.classList.add('active');
+        area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    };
+
     // endereço colado -> URL pronta (ou erro explicando o que está errado)
     function sendUrl() {
         const raw = urlEl.value.trim();

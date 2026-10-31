@@ -1302,6 +1302,11 @@ button.standard-btn.stop:hover { background: #151515; border-color: #fff; }
 .fx-eye-btn { flex: none; width: 42px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 8px; }
 .fx-eye-btn svg { width: 20px; height: 20px; }
 .fx-eye-btn.active { background: #333; border-color: #555; }
+.fx-qr-area { text-align: center; padding: 16px 0 8px; }
+.fx-qr-area #fx-qr-code { display: inline-block; padding: 12px; background: #181818; border-radius: 12px; border: 1px solid #333; }
+.fx-qr-area #fx-qr-code img { display: block; }
+.fx-qr-hint { font-size: 0.75rem; color: #888; margin: 8px 0 0; }
+:root[data-theme="light"] .fx-qr-area #fx-qr-code { background: #f5f5f5; border-color: #ccc; }
 .fx-send-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .fx-send .fx-btn { padding: 10px 16px; }
 .fx-btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border-strong); }

@@ -140,6 +140,7 @@
     }
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <button class="bg-toggle theme-toggle" id="theme-toggle" type="button" title="Ativar modo claro" aria-label="Ativar modo claro">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <g class="ic-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></g>
@@ -716,8 +717,15 @@
                             <button type="button" class="fx-btn fx-eye-btn" id="fx-eye-btn" onclick="fxToggleKey()" aria-label="Mostrar/ocultar chave" title="Mostrar/ocultar">
                                 <svg id="fx-eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                             </button>
+                            <button type="button" class="fx-btn fx-eye-btn" id="fx-qr-btn" onclick="fxToggleQR()" aria-label="Mostrar QR Code" title="QR Code da chave">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="4" height="4"/><line x1="22" y1="14" x2="22" y2="14.01"/><line x1="22" y1="18" x2="22" y2="22"/><line x1="18" y1="22" x2="18" y2="22.01"/><rect x="5" y="5" width="2" height="2"/><rect x="17" y="5" width="2" height="2"/><rect x="5" y="17" width="2" height="2"/></svg>
+                            </button>
                         </div>
                     </form>
+                    <div id="fx-qr-area" class="fx-qr-area" hidden>
+                        <div id="fx-qr-code"></div>
+                        <p class="fx-qr-hint">Escaneie com o celular para copiar a chave</p>
+                    </div>
                     <div class="fx-send-row">
                         <button type="button" class="fx-btn" id="fx-send-go" onclick="fxSend()">Enviar</button>
                         <button type="button" class="fx-btn ghost" onclick="fxSendPreview()">Pré-visualizar</button>
