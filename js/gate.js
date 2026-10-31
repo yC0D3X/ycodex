@@ -6,7 +6,7 @@
         { nome: 'WebCam', ok: function () { return byChk('ok-webcam'); } },
         { nome: 'Microfone', ok: function () { return byChk('ok-mic'); } },
         { nome: 'Áudio (esquerdo, estéreo e direito)', ok: function () { return allDone(['result-left', 'result-stereo', 'result-right']); } },
-        { nome: 'Touchpad', ok: function () { return byChk('no-touchpad') || allDone(['tp-demo-result']); } },
+        { nome: 'Touchpad', ok: function () { return allDone(['tp-demo-result']); } },
         // não é teste: o nome do técnico é obrigatório para imprimir
         { nome: 'Nome do técnico', campo: 'fx-tecnico', sim: 'Preenchido', nao: 'Não preenchido',
           ok: function () { var el = document.getElementById('fx-tecnico'); return !!(el && el.value.trim()); } }
@@ -89,36 +89,20 @@
     window.fxSend = travado(window.fxSend);
 
     // atualiza quando um checkbox muda ou quando áudio/touchpad marcam um resultado
-    // "Não possui touchpad" conta como teste feito e desativa o botão do teste
-    var noTp = document.getElementById('no-touchpad');
-    noTp.addEventListener('change', function () {
-        noTp.closest('.card').classList.toggle('tp-none', noTp.checked);
-        syncTpField();
-    });
-
-    // campo "Touchpad" da ficha: marcado = sempre "Não possui" (a palavra do técnico vale mais que a
-    // detecção automática); ao desmarcar, tira só esse texto
-    var TP_OK = 'OK';
+    // campo "Touchpad" da ficha: vira "OK" quando os clicks do mouse da etapa do touchpad foram feitos
     function syncTpField() {
         var f = document.getElementById('fx-touchpad');
         if (!f) return;
-        var v = f.value.trim();
-        if (noTp.checked && v !== TP_OK) f.value = TP_OK;
-        else if (!noTp.checked && v === TP_OK) f.value = '';
-        else if (!noTp.checked) {
-            var demoEl = document.getElementById('tp-demo-result');
-            var demoDone = demoEl && demoEl.classList.contains('done');
-            if (demoDone && v !== 'OK') f.value = 'OK';
-            else return;
-        }
-        else return;
+        var demoEl = document.getElementById('tp-demo-result');
+        if (!(demoEl && demoEl.classList.contains('done')) || f.value.trim() === 'OK') return;
+        f.value = 'OK';
         f.dispatchEvent(new Event('input', { bubbles: true }));
     }
     // quando a ficha é redesenhada (comando do terminal / nova ficha), aplica de novo
     var fxSt = document.getElementById('fx-status');
     if (fxSt && window.MutationObserver) new MutationObserver(syncTpField).observe(fxSt, { childList: true });
 
-    ['ok-keyboard', 'ok-webcam', 'ok-mic', 'no-touchpad'].forEach(function (id) {
+    ['ok-keyboard', 'ok-webcam', 'ok-mic'].forEach(function (id) {
         var el = document.getElementById(id);
         if (el) el.addEventListener('change', update);
     });

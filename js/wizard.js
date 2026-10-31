@@ -67,12 +67,11 @@
         var btn1 = document.getElementById('wiz-next-1');
         if (btn1) btn1.classList.toggle('visible', !!(kb && kb.checked));
 
-        // Etapa 2: checkbox no-touchpad OU demonstração concluída
-        var noTp = document.getElementById('no-touchpad');
+        // Etapa 2: clicks do mouse (esquerdo e direito) concluídos
         var demoEl = document.getElementById('tp-demo-result');
-        var demoDone = demoEl && demoEl.classList.contains('done');
+        var demoDone = !!(demoEl && demoEl.classList.contains('done'));
         var btn2 = document.getElementById('wiz-next-2');
-        if (btn2) btn2.classList.toggle('visible', !!(noTp && noTp.checked) || demoDone);
+        if (btn2) btn2.classList.toggle('visible', demoDone);
 
         // Etapa 3: checkbox ok-mic
         var mic = document.getElementById('ok-mic');
@@ -96,8 +95,6 @@
     window.wizSyncTpFicha = function () {
         var f = document.getElementById('fx-touchpad');
         if (!f) return;
-        var noTp = document.getElementById('no-touchpad');
-        if (noTp && noTp.checked) return;
         var demoEl = document.getElementById('tp-demo-result');
         if (demoEl && demoEl.classList.contains('done')) f.value = 'OK';
     };

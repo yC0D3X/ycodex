@@ -92,15 +92,14 @@
 
         // 5. Touchpad
         var tpDemo = isDone('tp-demo-result');
-        var noTp = isChk('no-touchpad');
         [['tp-demo-result','pv-tp-demo'],['tp-card-scroll','pv-tp-scroll'],['tp-card-pinch','pv-tp-pinch']].forEach(function (p) {
             var src = document.getElementById(p[0]), pv = document.getElementById(p[1]);
             if (src && pv) { pv.className = src.className; pv.innerHTML = src.innerHTML; }
         });
-        var tpOk = noTp || tpDemo;
+        var tpOk = tpDemo;
         var tpBadge = document.getElementById('pv-tp-badge');
         if (tpBadge) {
-            if (tpOk) { badgeOk(tpBadge); addLog('tp', noTp ? 'Touchpad marcado como funcionando' : 'Touchpad demonstração concluída', true); }
+            if (tpOk) { badgeOk(tpBadge); addLog('tp', 'Touchpad: clicks do mouse concluídos', true); }
             else badgePend(tpBadge);
         }
 

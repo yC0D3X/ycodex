@@ -241,11 +241,12 @@
             dCtx.moveTo(dW - p, p); dCtx.lineTo(p, dH - p);
             dCtx.stroke();
         }
+        // etapa concluída = clicou com o botão esquerdo E com o direito (desenhar o X é só visual)
         function dCheck() {
-            var ok = dDrawn && dLeft && dRight;
+            var ok = dLeft && dRight;
             var el = document.getElementById('tp-demo-result');
             if (el) {
-                el.innerHTML = '<span class="dot-status">' + (ok ? '✓' : '○') + '</span> Demonstração — ' + (ok ? 'Concluída' : 'Não concluída');
+                el.innerHTML = '<span class="dot-status">' + (ok ? '✓' : '○') + '</span> Clicks do Mouse — ' + (ok ? 'Concluído' : 'Não concluído');
                 el.classList.toggle('done', ok);
             }
         }
@@ -291,7 +292,10 @@
             if (dPts > 30 && !dDrawn) { dDrawn = true; dCheck(); }
         });
 
+        // só conta os cliques feitos com a etapa do touchpad aberta (não os do teste de teclado e mouse)
+        var tpStep = document.querySelector('.test-step[data-step="2"]');
         window.addEventListener('mousedown', function (e) {
+            if (tpStep && !tpStep.classList.contains('active')) return;
             if (e.button === 0 && !dLeft) { dLeft = true; dCheck(); }
             if (e.button === 2 && !dRight) { dRight = true; dCheck(); }
         });

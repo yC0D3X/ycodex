@@ -1283,8 +1283,6 @@ button.standard-btn.stop:hover { background: #151515; border-color: #fff; }
 .test-ok { margin-top: 12px; align-self: flex-start; }
 /* (preview styles moved to pv-* block above) */
 /* "Touchpad funcionando": apaga os resultados e desativa o teste */
-.card.tp-none .audio-results, .card.tp-none .tp-desc { opacity: 0.35; }
-.card.tp-none #tp-start { opacity: 0.35; pointer-events: none; }
 /* trava da ficha: lista o que falta testar */
 .fx-gate { display: none; }
 .fx-gate[hidden] { display: none; }
