@@ -471,51 +471,6 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
         btn.title = isPassword ? 'Ocultar' : 'Mostrar';
     };
 
-    // --- Passkey (WebAuthn): salvar chave no celular e preencher via QR do sistema ---
-    const PASSKEY_RP = 'ycodex.xyz';
-    window.fxPasskey = async function () {
-        if (!window.PublicKeyCredential) { sendMsg('Este navegador não suporta chaves de acesso (Passkey).', 'err'); return; }
-        try {
-            const cred = await navigator.credentials.get({
-                publicKey: {
-                    challenge: crypto.getRandomValues(new Uint8Array(32)),
-                    rpId: PASSKEY_RP,
-                    userVerification: 'preferred',
-                    timeout: 120000
-                }
-            });
-            if (cred.response.userHandle) {
-                urlEl.value = new TextDecoder().decode(cred.response.userHandle);
-                urlEl.type = 'text';
-                urlEl.dispatchEvent(new Event('input', { bubbles: true }));
-                sendMsg('✓ Chave preenchida!', 'ok');
-            }
-        } catch (e) {
-            if (e.name !== 'NotAllowedError') sendMsg('Erro: ' + e.message, 'err');
-        }
-    };
-    window.fxSaveKey = async function () {
-        if (!window.PublicKeyCredential) { sendMsg('Este navegador não suporta chaves de acesso (Passkey).', 'err'); return; }
-        const raw = urlEl.value.trim();
-        if (!raw) { sendMsg('Cole a chave do webhook no campo acima primeiro.', 'err'); return; }
-        const encoded = new TextEncoder().encode(raw);
-        if (encoded.length > 64) { sendMsg('URL muito longa para chave de acesso (máx. ~64 caracteres). Use uma URL mais curta ou cole manualmente.', 'err'); return; }
-        try {
-            await navigator.credentials.create({
-                publicKey: {
-                    challenge: crypto.getRandomValues(new Uint8Array(32)),
-                    rp: { id: PASSKEY_RP, name: 'yCODEX' },
-                    user: { id: encoded, name: 'webhook', displayName: 'Chave do webhook' },
-                    pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
-                    authenticatorSelection: { residentKey: 'required', userVerification: 'preferred' },
-                    timeout: 120000
-                }
-            });
-            sendMsg('✓ Chave salva! Em qualquer computador, clique no botão QR para preencher.', 'ok');
-        } catch (e) {
-            if (e.name !== 'NotAllowedError') sendMsg('Erro ao salvar: ' + e.message, 'err');
-        }
-    };
 
     // endereço colado -> URL pronta (ou erro explicando o que está errado)
     function sendUrl() {
