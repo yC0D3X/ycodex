@@ -471,21 +471,39 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
         btn.title = isPassword ? 'Ocultar' : 'Mostrar';
     };
 
-    // --- QR code da chave ---
-    let qrInstance = null;
+    // --- QR code + relay ntfy.sh: celular escaneia, iOS Passwords preenche, chave chega aqui ---
+    let pairSSE = null;
     window.fxToggleQR = function () {
         const area = document.getElementById('fx-qr-area');
         const btn = document.getElementById('fx-qr-btn');
-        if (!area.hidden) { area.hidden = true; btn.classList.remove('active'); return; }
-        const raw = urlEl.value.trim();
-        if (!raw) { sendMsg('Digite a chave primeiro para gerar o QR Code.', 'err'); return; }
+        if (!area.hidden) { area.hidden = true; btn.classList.remove('active'); if (pairSSE) { pairSSE.close(); pairSSE = null; } return; }
+        const topic = 'ycx-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+        const pairUrl = 'https://ycodex.xyz/pair.html?t=' + encodeURIComponent(topic);
         const container = document.getElementById('fx-qr-code');
         container.innerHTML = '';
         const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-        qrInstance = new QRCode(container, { text: raw, width: 220, height: 220, colorDark: isLight ? '#000000' : '#ffffff', colorLight: isLight ? '#f5f5f5' : '#181818', correctLevel: QRCode.CorrectLevel.M });
+        new QRCode(container, { text: pairUrl, width: 220, height: 220, colorDark: isLight ? '#000000' : '#ffffff', colorLight: isLight ? '#f5f5f5' : '#181818', correctLevel: QRCode.CorrectLevel.M });
         area.hidden = false;
         btn.classList.add('active');
         area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        document.getElementById('fx-qr-hint').textContent = 'Escaneie com o celular · aguardando chave…';
+        if (pairSSE) pairSSE.close();
+        pairSSE = new EventSource('https://ntfy.sh/' + topic + '/sse');
+        pairSSE.addEventListener('message', (e) => {
+            try {
+                const data = JSON.parse(e.data);
+                if (data.message) {
+                    urlEl.value = data.message;
+                    urlEl.type = 'text';
+                    urlEl.dispatchEvent(new Event('input', { bubbles: true }));
+                    document.getElementById('fx-qr-hint').textContent = '✓ Chave recebida!';
+                    btn.classList.remove('active');
+                    setTimeout(() => { area.hidden = true; }, 2000);
+                    pairSSE.close(); pairSSE = null;
+                    sendMsg('✓ Chave preenchida pelo celular.', 'ok');
+                }
+            } catch (_) {}
+        });
     };
 
     // endereço colado -> URL pronta (ou erro explicando o que está errado)

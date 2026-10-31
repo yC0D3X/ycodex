@@ -709,7 +709,7 @@
 
                 <div class="fx-send" id="fx-send" hidden>
                     <p class="fx-send-title">Enviar a ficha para o seu sistema</p>
-                    <p>Cole o endereço do seu sistema. Ao clicar em Enviar, todas as informações desta ficha vão para ele em JSON. Use o <strong>app Senhas</strong> do celular para salvar e preencher automaticamente.</p>
+                    <p>Cole o endereço do seu sistema. Ao clicar em Enviar, todas as informações desta ficha vão para ele em JSON. Use o botão <strong>QR Code</strong> para preencher a chave pelo celular com o <strong>app Senhas</strong>.</p>
                     <form class="fx-send-form" onsubmit="return false" autocomplete="on">
                         <input type="hidden" autocomplete="username" value="ycodex-webhook">
                         <div class="fx-send-url-row">
@@ -724,7 +724,7 @@
                     </form>
                     <div id="fx-qr-area" class="fx-qr-area" hidden>
                         <div id="fx-qr-code"></div>
-                        <p class="fx-qr-hint">Escaneie com o celular para copiar a chave</p>
+                        <p class="fx-qr-hint" id="fx-qr-hint">Escaneie com o celular · aguardando chave…</p>
                     </div>
                     <div class="fx-send-row">
                         <button type="button" class="fx-btn" id="fx-send-go" onclick="fxSend()">Enviar</button>

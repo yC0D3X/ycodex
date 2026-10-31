@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>yCODEX · Chave</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#111;color:#eee;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:16px}
+.card{width:100%;max-width:380px;background:#1a1a1a;border:1px solid #333;border-radius:16px;padding:28px 24px;text-align:center}
+.logo{font-size:1.4rem;font-weight:700;letter-spacing:0.05em;margin-bottom:4px}
+.sub{font-size:0.8rem;color:#888;margin-bottom:24px}
+form{margin:0}
+label{display:block;text-align:left;font-size:0.75rem;color:#aaa;margin-bottom:6px}
+input[type="password"],input[type="text"]{width:100%;background:#111;color:#fff;border:1px solid #444;border-radius:10px;padding:14px 12px;font-size:1rem;outline:none;-webkit-appearance:none}
+input:focus{border-color:#fff}
+.btn{display:block;width:100%;margin-top:16px;padding:14px;border:none;border-radius:10px;background:#fff;color:#000;font-size:1rem;font-weight:600;cursor:pointer;-webkit-appearance:none}
+.btn:active{opacity:0.7}
+.btn:disabled{opacity:0.3;cursor:not-allowed}
+.msg{margin-top:14px;font-size:0.8rem;min-height:1.2em}
+.msg.ok{color:#6f6}
+.msg.err{color:#f66}
+.msg.wait{color:#fc0}
+.done-icon{font-size:3rem;margin:12px 0}
+@media(prefers-color-scheme:light){
+body{background:#f2f2f2;color:#111}
+.card{background:#fff;border-color:#ddd}
+input[type="password"],input[type="text"]{background:#f7f7f7;color:#000;border-color:#ccc}
+input:focus{border-color:#000}
+.btn{background:#000;color:#fff}
+}
+</style>
+</head>
+<body>
+<div class="card">
+    <div class="logo">yCODEX</div>
+    <div class="sub">Enviar chave do webhook para o computador</div>
+    <form id="frm" onsubmit="return false" autocomplete="on">
+        <input type="hidden" autocomplete="username" value="ycodex-webhook">
+        <label for="key">Chave do webhook</label>
+        <input type="password" id="key" name="password" autocomplete="current-password" placeholder="Toque para preencher com Senhas" autofocus>
+        <button type="button" class="btn" id="go" onclick="send()">Enviar para o computador</button>
+    </form>
+    <div class="msg" id="msg"></div>
+</div>
+<script>
+const params = new URLSearchParams(location.search);
+const topic = params.get('t');
+const msg = document.getElementById('msg');
+const goBtn = document.getElementById('go');
+if (!topic) { msg.textContent = 'Link inválido — escaneie o QR Code novamente.'; msg.className = 'msg err'; goBtn.disabled = true; }
+async function send() {
+    const key = document.getElementById('key').value.trim();
+    if (!key) { msg.textContent = 'Preencha a chave primeiro.'; msg.className = 'msg err'; return; }
+    goBtn.disabled = true;
+    msg.textContent = 'Enviando…';
+    msg.className = 'msg wait';
+    try {
+        const res = await fetch('https://ntfy.sh/' + topic, { method: 'POST', body: key });
+        if (res.ok) {
+            document.querySelector('.card').innerHTML = '<div class="done-icon">✓</div><div class="logo">Pronto!</div><div class="sub">A chave foi enviada para o computador.<br>Pode fechar esta página.</div>';
+        } else { throw new Error('HTTP ' + res.status); }
+    } catch (e) {
+        msg.textContent = 'Erro ao enviar: ' + e.message;
+        msg.className = 'msg err';
+        goBtn.disabled = false;
+    }
+}
+</script>
+</body>
+</html>
