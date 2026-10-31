@@ -32,11 +32,21 @@
                 metaLeft.parentElement.insertBefore(altLeft, metaLeft);
             }
 
-            // Lado direito no Mac: só existem Command R e Option R (sem Control R)
-            if (metaRight) metaRight.innerHTML = KEY_ICONS.cmd;
-            if (altRight) altRight.innerHTML = KEY_ICONS.option;
-            if (metaRight && altRight && metaRight.parentElement) {
-                metaRight.parentElement.insertBefore(metaRight, altRight);
+            // Lado direito no Mac: Command R e depois Option R (sem Menu e sem Control R).
+            // O HTML (padrão Windows) não tem MetaRight: a tecla AltGr vira Command e a Menu vira
+            // Option. Os ids mudam junto, porque o teste acende a tecla pelo id = e.code.
+            const ctxMenu = document.getElementById('ContextMenu');
+            if (!metaRight && altRight && ctxMenu) {
+                altRight.id = 'MetaRight';
+                altRight.innerHTML = KEY_ICONS.cmd;
+                ctxMenu.id = 'AltRight';
+                ctxMenu.innerHTML = KEY_ICONS.option;
+            } else {
+                if (metaRight) metaRight.innerHTML = KEY_ICONS.cmd;
+                if (altRight) altRight.innerHTML = KEY_ICONS.option;
+                if (metaRight && altRight && metaRight.parentElement) {
+                    metaRight.parentElement.insertBefore(metaRight, altRight);
+                }
             }
             if (ctrlRight) ctrlRight.style.display = 'none';
         } else {
