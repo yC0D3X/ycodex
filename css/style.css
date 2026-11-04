@@ -1279,7 +1279,7 @@ button.standard-btn.stop:hover { background: #151515; border-color: #fff; }
 /* trava da ficha: lista o que falta testar */
 .fx-bat { margin: 14px 0 0; padding: 10px 14px; border: 1px solid var(--border-strong); border-radius: 8px; font-size: 0.85rem; line-height: 1.45; color: var(--text); }
 .fx-bat[hidden] { display: none; }
-.fx-bat.ok { font-weight: 600; }
+.fx-bat.ok { color: #b6ffb6; border-color: #b6ffb6; font-weight: 600; }
 .fx-bat.err { color: var(--danger); border-color: var(--danger); font-weight: 600; }
 .fx-pass { width: min(340px, calc(100vw - 32px)); padding: 18px; background: var(--surface); color: var(--text); border: 1px solid var(--border-strong); border-radius: 10px; }
 .fx-pass::backdrop { background: rgba(0,0,0,0.6); }
@@ -1732,6 +1732,7 @@ body.pl-loading .brand, body.pl-loading .container { opacity: 0; transform: tran
 :root[data-theme="light"] .fx-send-url:focus { border-color: #111; }
 :root[data-theme="light"] .fx-btn.ghost:hover { background: #f0f0f0; }
 :root[data-theme="light"] .fx-send-msg.ok { color: var(--ok); }
+:root[data-theme="light"] .fx-bat.ok { color: var(--ok); border-color: var(--ok); }
 :root[data-theme="light"] .fx-doc summary:hover { color: #111; }
 :root[data-theme="light"] .fx-doc pre { background: #f5f5f5; }
 :root[data-theme="light"] .fx-vars th { background: #f0f0f0; }

@@ -310,10 +310,14 @@
         if (!b || !r || b.id !== r.id || b.status !== 'running') return false;
         const from = Number.isFinite(r.from) ? r.from : null, to = Number.isFinite(r.to) ? r.to : null;
         const trail = from != null && to != null ? ` (${from}% → ${to}%)` : '';
-        const note = { ok: `Subindo carga${trail}`, fail: `NÃO sobe carga${trail}`, full: `Carga cheia, não testada${trail}`, unknown: 'Carga não verificada' }[r.result];
-        if (!note) return false;
+        if (!['ok', 'fail', 'full', 'unknown'].includes(r.result)) return false;
         Object.assign(b, { status: r.result, from, to });
-        state.values.bateria = [state.values.bateria, note].filter(Boolean).join(' · ');
+        // subiu: o campo fica só com o estado da bateria | não subiu: o resultado substitui o campo
+        if (r.result === 'fail') state.values.bateria = 'Não sobe carga.';
+        else if (r.result !== 'ok') {
+            const note = r.result === 'full' ? `Carga cheia, não testada${trail}` : 'Carga não verificada';
+            state.values.bateria = [state.values.bateria, note].filter(Boolean).join(' · ');
+        }
         save();
         return true;
     }
