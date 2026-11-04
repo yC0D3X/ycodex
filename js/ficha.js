@@ -288,19 +288,21 @@
         const trail = b.from != null && b.to != null ? ` (${b.from}% → ${b.to}%)` : '';
         let txt, kind = '';
         if (b.status === 'running') {
-            const left = Math.ceil((b.started + b.seconds * 1000 - Date.now()) / 1000);
+            // mesmo início e mesmo cálculo da janela do comando: os dois contadores andam juntos
+            const left = b.started == null ? 0 : Math.ceil((b.started + b.seconds * 1000 - Date.now()) / 1000);
             const mm = String(Math.floor(left / 60)).padStart(2, '0'), ss = String(left % 60).padStart(2, '0');
-            txt = left > 0
-                ? `Verificando se a bateria sobe carga… ${mm}:${ss} — Imprimir e Enviar liberam no fim. Deixe o carregador conectado e a janela do comando aberta.`
-                : 'Aguardando o resultado da bateria na janela do comando. Se ela foi fechada, rode o comando de novo.';
+            if (b.started == null) txt = 'Conecte o carregador: a verificação da bateria começa quando ele for conectado.';
+            else if (left > 0) txt = `Verificando se a bateria sobe carga… ${mm}:${ss} — Imprimir e Enviar liberam no fim. Deixe o carregador conectado e a janela do comando aberta.`;
+            else if (left > -15) txt = 'Finalizando a verificação da bateria…';
+            else txt = 'Aguardando o resultado da bateria: confira se o carregador está conectado e a janela do comando aberta. Se ela foi fechada, rode o comando de novo.';
         } else if (b.status === 'ok') { txt = `✓ A bateria subiu carga${trail}.`; kind = 'ok'; }
         else if (b.status === 'full') { txt = `A carga já estava cheia${trail}: não deu para testar se ela sobe.`; }
         else if (b.status === 'fail') { txt = `⚠ A bateria não subiu carga${trail}. Verifique bateria, carregador, conector e limite de carga configurado no notebook.`; kind = 'err'; }
         else { txt = '⚠ Não foi possível ler a carga da bateria.'; kind = 'err'; }
-        batEl.textContent = txt;
+        if (batEl.textContent !== txt) batEl.textContent = txt;
         batEl.className = 'fx-bat' + (kind ? ' ' + kind : '');
     }
-    setInterval(() => { if (state.bat && state.bat.status === 'running') renderBat(); }, 1000);
+    setInterval(() => { if (state.bat && state.bat.status === 'running') renderBat(); }, 200);
 
     // grava o resultado na ficha certa; resultado de um comando antigo é ignorado
     function batApply(r) {
@@ -314,6 +316,14 @@
         state.values.bateria = [state.values.bateria, note].filter(Boolean).join(' · ');
         save();
         return true;
+    }
+
+    // o carregador foi conectado depois do início: a contagem recomeça junto com a janela do comando
+    function batSync(s) {
+        const b = state.bat;
+        if (!b || !s || b.id !== s.id || b.status !== 'running') return;
+        b.started = Number(s.started) || null;
+        save();
     }
 
     // usado pela trava (gate.js)
@@ -331,7 +341,7 @@
         state.label = [v.marca, v.modelo].filter(Boolean).join(' ');
         // Windows: o comando está verificando se a bateria sobe carga; o resultado chega depois (#bateria=)
         const bt = (d.battery || {}).test;
-        if (bt && bt.id) state.bat = { id: String(bt.id), started: Number(bt.started) || Date.now(), seconds: Number(bt.seconds) || 300, status: 'running' };
+        if (bt && bt.id) state.bat = { id: String(bt.id), started: Number(bt.started) || null, seconds: Number(bt.seconds) || 300, status: 'running' };
         for (const k in v) if (v[k]) { state.values[k] = v[k]; if (k !== 'data') state.auto.push(k); }
         for (const k in c) if (c[k]) state.auto.push(k);
         save();
@@ -718,11 +728,12 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
             chan.postMessage({ t: 'nova', id });
         }
     });
-    // resultado da verificação da bateria (#bateria=...): grava e, se a ficha está em outra aba, fecha esta
+    // verificação da bateria (#bateria=...): grava o resultado ou o novo início e, se a ficha está em outra aba, fecha esta
     else if (location.hash.indexOf('#bateria=') === 0) {
-        let r = null;
-        try { r = decode(location.hash.slice('#bateria='.length)).batResult; } catch (e) { console.warn('Ficha: resultado inválido no link', e); }
-        batApply(r);
+        let m = {};
+        try { m = decode(location.hash.slice('#bateria='.length)) || {}; } catch (e) { console.warn('Ficha: resultado inválido no link', e); }
+        batApply(m.batResult);
+        batSync(m.batSync);
         history.replaceState(null, '', location.pathname + location.search);
         switchTab('ficha');
         if (chan) {

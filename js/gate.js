@@ -155,14 +155,47 @@
     });
     setTimeout(function () { update(); window.updateHighlights(); }, 100);
 
+    function liberar() {
+        free = true;
+        try { sessionStorage.setItem('fx-free', '1'); } catch (e) {}
+        update();
+        return '✓ Ficha liberada';
+    }
     Object.defineProperty(window, atob('R2VuZ2Fy'), {
         configurable: true,
         enumerable: false,
-        get: function () {
-            free = true;
-            try { sessionStorage.setItem('fx-free', '1'); } catch (e) {}
-            update();
-            return '✓ Ficha liberada';
-        }
+        get: liberar
     });
+
+    // Alt+Shift+G faz o mesmo. Captura antes do teste de teclado, que escuta todas as teclas,
+    // para o G não ficar marcado como testado (o e.code vale para qualquer layout de teclado).
+    var toastTimer, gPreso = false;
+    function avisar(msg) {
+        var t = document.getElementById('fx-free-toast');
+        if (!t) {
+            t = document.createElement('div');
+            t.id = 'fx-free-toast';
+            t.className = 'bg-toast';
+            t.setAttribute('role', 'status');
+            document.body.appendChild(t);
+        }
+        t.textContent = msg;
+        void t.offsetWidth;
+        t.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2500);
+    }
+    window.addEventListener('keydown', function (e) {
+        if (e.code !== 'KeyG' || !e.altKey || !e.shiftKey || e.ctrlKey || e.metaKey) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        gPreso = true;
+        if (!e.repeat) avisar(liberar());
+    }, true);
+    window.addEventListener('keyup', function (e) {
+        if (e.code !== 'KeyG' || !gPreso) return;
+        gPreso = false;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+    }, true);
 })();
