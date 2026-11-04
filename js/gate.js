@@ -20,7 +20,6 @@
     }
 
     var free = false;
-    try { free = sessionStorage.getItem('fx-free') === '1'; } catch (e) {}
 
     var gate = document.getElementById('fx-gate');
     var list = document.getElementById('fx-gate-list');
@@ -155,21 +154,34 @@
     });
     setTimeout(function () { update(); window.updateHighlights(); }, 100);
 
-    function liberar() {
-        free = true;
-        try { sessionStorage.setItem('fx-free', '1'); } catch (e) {}
-        update();
-        return '✓ Ficha liberada';
+    // --- LIBERAÇÃO COM SENHA (Alt+Shift+G ou o comando no console) ---
+    // A senha não fica no código: só o sal e a conferência do PBKDF2. A aba guarda o valor derivado,
+    // que é conferido de novo ao recarregar; marcar a aba à mão não libera nada.
+    var PASS = { salt: '6075cd3a343a298203ec0e0bb30bb0b5', iter: 300000, check: '734acb25bc8d96f596833cbcda2a1a65879394fe53a392c032f22ebd3f6f1353' };
+    function hexDe(buf) { return Array.from(new Uint8Array(buf), function (b) { return b.toString(16).padStart(2, '0'); }).join(''); }
+    function bytesDe(h) { return Uint8Array.from(h.match(/../g), function (x) { return parseInt(x, 16); }); }
+    function derivar(senha) {
+        return crypto.subtle.importKey('raw', new TextEncoder().encode(senha), 'PBKDF2', false, ['deriveBits']).then(function (k) {
+            return crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: bytesDe(PASS.salt), iterations: PASS.iter }, k, 256);
+        }).then(hexDe);
     }
-    Object.defineProperty(window, atob('R2VuZ2Fy'), {
-        configurable: true,
-        enumerable: false,
-        get: liberar
-    });
+    function valido(tok) {
+        if (!/^[0-9a-f]{64}$/.test(tok || '')) return Promise.resolve(false);
+        return crypto.subtle.digest('SHA-256', bytesDe(tok)).then(function (d) { return hexDe(d) === PASS.check; });
+    }
+    function liberar(tok) {
+        free = true;
+        try { sessionStorage.setItem('fx-free', tok); } catch (e) {}
+        update();
+    }
+    try {
+        var salvo = sessionStorage.getItem('fx-free');
+        if (salvo) valido(salvo).then(function (ok) {
+            if (ok) { free = true; update(); } else sessionStorage.removeItem('fx-free');
+        }).catch(function () {});
+    } catch (e) {}
 
-    // Alt+Shift+G faz o mesmo. Captura antes do teste de teclado, que escuta todas as teclas,
-    // para o G não ficar marcado como testado (o e.code vale para qualquer layout de teclado).
-    var toastTimer, gPreso = false;
+    var toastTimer, gPreso = false, passDlg = null;
     function avisar(msg) {
         var t = document.getElementById('fx-free-toast');
         if (!t) {
@@ -185,12 +197,59 @@
         clearTimeout(toastTimer);
         toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2500);
     }
+    function criarDialogo() {
+        var d = document.createElement('dialog');
+        d.className = 'fx-pass';
+        d.innerHTML = '<form><label for="fx-pass-in">Senha para liberar a ficha</label>' +
+            '<input type="password" id="fx-pass-in" autocomplete="off" spellcheck="false">' +
+            '<div class="fx-pass-msg" id="fx-pass-msg" role="alert"></div>' +
+            '<div class="fx-pass-btns"><button type="button" class="fx-btn ghost" id="fx-pass-no">Cancelar</button>' +
+            '<button type="submit" class="fx-btn" id="fx-pass-go">Liberar</button></div></form>';
+        document.body.appendChild(d);
+        // o que é digitado aqui não pode contar nos testes de teclado e touchpad
+        ['keydown', 'keyup'].forEach(function (ev) { d.addEventListener(ev, function (e) { e.stopPropagation(); }); });
+        var input = d.querySelector('input'), msg = d.querySelector('.fx-pass-msg'), go = d.querySelector('#fx-pass-go');
+        d.querySelector('#fx-pass-no').onclick = function () { d.close(); };
+        d.addEventListener('close', function () { input.value = ''; msg.textContent = ''; });
+        d.querySelector('form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            if (go.disabled) return;
+            go.disabled = true;
+            msg.textContent = '';
+            derivar(input.value).then(function (tok) {
+                return valido(tok).then(function (ok) {
+                    if (ok) { liberar(tok); d.close(); avisar('✓ Ficha liberada'); }
+                    else { msg.textContent = 'Senha incorreta.'; input.value = ''; input.focus(); }
+                });
+            }).catch(function () {
+                msg.textContent = 'Não foi possível conferir a senha neste navegador.';
+            }).then(function () { go.disabled = false; });
+        });
+        return d;
+    }
+    function pedirSenha() {
+        if (free) { avisar('✓ Ficha já liberada'); return; }
+        if (!passDlg) passDlg = criarDialogo();
+        if (!passDlg.open) passDlg.showModal();
+        passDlg.querySelector('input').focus();
+    }
+    Object.defineProperty(window, atob('R2VuZ2Fy'), {
+        configurable: true,
+        enumerable: false,
+        get: function () {
+            pedirSenha();
+            return 'Digite a senha na página.';
+        }
+    });
+
+    // Captura antes do teste de teclado, que escuta todas as teclas, para o G não ficar marcado
+    // como testado (o e.code vale para qualquer layout de teclado).
     window.addEventListener('keydown', function (e) {
         if (e.code !== 'KeyG' || !e.altKey || !e.shiftKey || e.ctrlKey || e.metaKey) return;
         e.preventDefault();
         e.stopImmediatePropagation();
         gPreso = true;
-        if (!e.repeat) avisar(liberar());
+        if (!e.repeat) pedirSenha();
     }, true);
     window.addEventListener('keyup', function (e) {
         if (e.code !== 'KeyG' || !gPreso) return;
