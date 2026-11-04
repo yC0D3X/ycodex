@@ -1277,6 +1277,10 @@ button.standard-btn.stop:hover { background: #151515; border-color: #fff; }
 /* (preview styles moved to pv-* block above) */
 /* "Touchpad funcionando": apaga os resultados e desativa o teste */
 /* trava da ficha: lista o que falta testar */
+.fx-bat { margin: 14px 0 0; padding: 10px 14px; border: 1px solid var(--border-strong); border-radius: 8px; font-size: 0.85rem; line-height: 1.45; color: var(--text); }
+.fx-bat[hidden] { display: none; }
+.fx-bat.ok { font-weight: 600; }
+.fx-bat.err { color: var(--danger); border-color: var(--danger); font-weight: 600; }
 .fx-gate { display: none; }
 .fx-gate[hidden] { display: none; }
 .fx-gate-title { margin: 0; font-size: 0.85rem; font-weight: 600; color: var(--text); }

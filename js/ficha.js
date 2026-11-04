@@ -273,10 +273,55 @@
             st.innerHTML = '<span class="fx-dot"></span>Aguardando o comando…';
             st.classList.remove('ok');
         }
+        renderBat();
         if (window.updateFichaGate) window.updateFichaGate();
         if (window.updateHighlights) window.updateHighlights();
         if (window.syncNumpadFicha) window.syncNumpadFicha();
     }
+
+    // ---------- verificação de carga da bateria (só Windows, feita pela janela do comando) ----------
+    const batEl = document.getElementById('fx-bat');
+    function renderBat() {
+        const b = state.bat;
+        batEl.hidden = !b;
+        if (!b) return;
+        const trail = b.from != null && b.to != null ? ` (${b.from}% → ${b.to}%)` : '';
+        let txt, kind = '';
+        if (b.status === 'running') {
+            const left = Math.ceil((b.started + b.seconds * 1000 - Date.now()) / 1000);
+            const mm = String(Math.floor(left / 60)).padStart(2, '0'), ss = String(left % 60).padStart(2, '0');
+            txt = left > 0
+                ? `Verificando se a bateria sobe carga… ${mm}:${ss} — Imprimir e Enviar liberam no fim. Deixe o carregador conectado e a janela do comando aberta.`
+                : 'Aguardando o resultado da bateria na janela do comando. Se ela foi fechada, rode o comando de novo.';
+        } else if (b.status === 'ok') { txt = `✓ A bateria subiu carga${trail}.`; kind = 'ok'; }
+        else if (b.status === 'full') { txt = `A carga já estava cheia${trail}: não deu para testar se ela sobe.`; }
+        else if (b.status === 'fail') { txt = `⚠ A bateria não subiu carga${trail}. Verifique bateria, carregador, conector e limite de carga configurado no notebook.`; kind = 'err'; }
+        else { txt = '⚠ Não foi possível ler a carga da bateria.'; kind = 'err'; }
+        batEl.textContent = txt;
+        batEl.className = 'fx-bat' + (kind ? ' ' + kind : '');
+    }
+    setInterval(() => { if (state.bat && state.bat.status === 'running') renderBat(); }, 1000);
+
+    // grava o resultado na ficha certa; resultado de um comando antigo é ignorado
+    function batApply(r) {
+        const b = state.bat;
+        if (!b || !r || b.id !== r.id || b.status !== 'running') return false;
+        const from = Number.isFinite(r.from) ? r.from : null, to = Number.isFinite(r.to) ? r.to : null;
+        const trail = from != null && to != null ? ` (${from}% → ${to}%)` : '';
+        const note = { ok: `Subindo carga${trail}`, fail: `NÃO sobe carga${trail}`, full: `Carga cheia, não testada${trail}`, unknown: 'Carga não verificada' }[r.result];
+        if (!note) return false;
+        Object.assign(b, { status: r.result, from, to });
+        state.values.bateria = [state.values.bateria, note].filter(Boolean).join(' · ');
+        save();
+        return true;
+    }
+
+    // usado pela trava (gate.js)
+    window.fxBattery = {
+        pending: () => !!(state.bat && state.bat.status === 'running'),
+        needsConfirm: () => !!(state.bat && (state.bat.status === 'fail' || state.bat.status === 'unknown') && !state.bat.confirmed),
+        confirm: () => { state.bat.confirmed = true; save(); }
+    };
 
     function applyData(d) {
         const { v, c } = toSheet(d);
@@ -284,6 +329,9 @@
         state.checks = c;
         state.ts = d.ts || '';
         state.label = [v.marca, v.modelo].filter(Boolean).join(' ');
+        // Windows: o comando está verificando se a bateria sobe carga; o resultado chega depois (#bateria=)
+        const bt = (d.battery || {}).test;
+        if (bt && bt.id) state.bat = { id: String(bt.id), started: Number(bt.started) || Date.now(), seconds: Number(bt.seconds) || 300, status: 'running' };
         for (const k in v) if (v[k]) { state.values[k] = v[k]; if (k !== 'data') state.auto.push(k); }
         for (const k in c) if (c[k]) state.auto.push(k);
         save();
@@ -321,6 +369,11 @@
         const ta = document.getElementById('fx-import-code');
         let d;
         try { d = decode(ta.value); } catch (e) { alert('Código inválido. Copie o código inteiro que o script mostrou no terminal.'); return; }
+        if (d && d.batResult) {
+            if (!batApply(d.batResult)) { alert('Este código de resultado não é da ficha que está aberta.'); return; }
+            render(); ta.value = ''; ta.closest('details').open = false;
+            return;
+        }
         macsReady.then(() => { applyData(d); ta.value = ''; ta.closest('details').open = false; });
     };
 
@@ -633,6 +686,13 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
     // estavam abertas; se alguma responder, os dados já foram para ela (localStorage) e a aba nova se fecha.
     const chan = 'BroadcastChannel' in window ? new BroadcastChannel('ycodex-ficha') : null;
     if (chan) chan.onmessage = (e) => {
+        // resultado da bateria: atualiza sem mudar de aba, para não atrapalhar quem está fazendo os testes
+        if (e.data && e.data.t === 'bat') {
+            state = load() || empty();
+            render();
+            chan.postMessage({ t: 'ok', id: e.data.id });
+            return;
+        }
         if (!e.data || e.data.t !== 'nova') return;
         state = load() || empty();
         render();
@@ -658,5 +718,18 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
             chan.postMessage({ t: 'nova', id });
         }
     });
+    // resultado da verificação da bateria (#bateria=...): grava e, se a ficha está em outra aba, fecha esta
+    else if (location.hash.indexOf('#bateria=') === 0) {
+        let r = null;
+        try { r = decode(location.hash.slice('#bateria='.length)).batResult; } catch (e) { console.warn('Ficha: resultado inválido no link', e); }
+        batApply(r);
+        history.replaceState(null, '', location.pathname + location.search);
+        switchTab('ficha');
+        if (chan) {
+            const id = Math.random().toString(36).slice(2);
+            chan.addEventListener('message', (e) => { if (e.data && e.data.t === 'ok' && e.data.id === id) window.close(); });
+            chan.postMessage({ t: 'bat', id });
+        }
+    }
     render();
 })();

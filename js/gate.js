@@ -9,7 +9,10 @@
         { nome: 'Touchpad', ok: function () { return allDone(['tp-demo-result']); } },
         // não é teste: o nome do técnico é obrigatório para imprimir
         { nome: 'Nome do técnico', campo: 'fx-tecnico', sim: 'Preenchido', nao: 'Não preenchido',
-          ok: function () { var el = document.getElementById('fx-tecnico'); return !!(el && el.value.trim()); } }
+          ok: function () { var el = document.getElementById('fx-tecnico'); return !!(el && el.value.trim()); } },
+        // não é teste: a janela do comando (Windows) está verificando se a bateria sobe carga
+        { nome: 'Carga da bateria', espera: true, sim: 'Verificada', nao: 'Verificando',
+          ok: function () { return !window.fxBattery.pending(); } }
     ];
     function byChk(id) { var el = document.getElementById(id); return !!(el && el.checked); }
     function allDone(ids) {
@@ -24,7 +27,7 @@
     var printBtn = document.querySelector('.fx-print:not(.fx-hook)');
     var sendBtn = document.getElementById('fx-send-go');
 
-    var TESTES_ONLY = TESTS.filter(function (t) { return !t.campo; });
+    var TESTES_ONLY = TESTS.filter(function (t) { return !t.campo && !t.espera; });
     function pending() { return free ? [] : TESTS.filter(function (t) { return !t.ok(); }); }
     function testesOk() { return free || TESTES_ONLY.every(function (t) { return t.ok(); }); }
 
@@ -45,9 +48,10 @@
         var ok = testesOk();
         lockFicha(!ok);
         printBtn.classList.toggle('locked', falta.length > 0);
-        printBtn.title = falta.length ? 'Conclua todos os testes e preencha o técnico para imprimir' : 'Imprimir ficha';
+        var soBat = falta.length > 0 && falta.every(function (t) { return t.espera; });
+        printBtn.title = soBat ? 'Aguarde a verificação de carga da bateria' : falta.length ? 'Conclua todos os testes e preencha o técnico para imprimir' : 'Imprimir ficha';
         sendBtn.classList.toggle('locked', falta.length > 0);
-        sendBtn.title = falta.length ? 'Conclua todos os testes e preencha o técnico para enviar' : 'Enviar ficha';
+        sendBtn.title = soBat ? 'Aguarde a verificação de carga da bateria' : falta.length ? 'Conclua todos os testes e preencha o técnico para enviar' : 'Enviar ficha';
         gate.hidden = falta.length === 0;
         var soCampo = falta.length > 0 && falta.every(function (t) { return t.campo; });
         gateTitle.textContent = soCampo ? 'Preencha o nome do técnico para imprimir ou enviar a ficha:' : 'Conclua todos os testes e preencha o técnico para imprimir ou enviar a ficha:';
@@ -79,8 +83,14 @@
             var falta = pending();
             if (falta.length) {
                 if (falta.every(function (t) { return t.campo; })) irParaTecnico();
+                else if (falta.every(function (t) { return t.espera; })) document.getElementById('fx-bat').scrollIntoView({ behavior: 'smooth', block: 'center' });
                 else gate.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return;
+            }
+            // bateria não subiu carga: o técnico confirma uma vez e o problema fica registrado na ficha
+            if (!free && window.fxBattery.needsConfirm()) {
+                if (!confirm('A bateria não subiu carga na verificação. Isso ficará registrado na ficha.\n\nContinuar mesmo assim?')) return;
+                window.fxBattery.confirm();
             }
             return fn.apply(this, arguments);
         };
