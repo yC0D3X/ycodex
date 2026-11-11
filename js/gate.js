@@ -30,10 +30,13 @@
     function pending() { return free ? [] : TESTS.filter(function (t) { return !t.ok(); }); }
     function testesOk() { return free || TESTES_ONLY.every(function (t) { return t.ok(); }); }
 
-    function lockFicha(locked) {
+    // modo AirPrint (opção 2 do comando): a ficha salva fica toda travada e só o Imprimir libera
+    function soImpressao() { return !free && !!(window.fxPrintOnly && window.fxPrintOnly()); }
+
+    function lockFicha(locked, tudo) {
         var campos = document.querySelectorAll('#fx-sheet input[type="text"], #fx-sheet input[type="date"]');
         campos.forEach(function (el) {
-            if (el.dataset.k === 'tecnico') return;
+            if (el.dataset.k === 'tecnico' && !tudo) { el.readOnly = false; return; }
             el.readOnly = locked;
         });
         var cbs = document.querySelectorAll('#fx-sheet input[type="checkbox"]');
@@ -45,12 +48,22 @@
     function update() {
         var falta = pending();
         var ok = testesOk();
-        lockFicha(!ok);
-        printBtn.classList.toggle('locked', falta.length > 0);
+        var air = soImpressao();
+        lockFicha(air || !ok, air);
+        printBtn.classList.toggle('locked', !air && falta.length > 0);
         var soBat = falta.length > 0 && falta.every(function (t) { return t.espera; });
-        printBtn.title = soBat ? 'Aguarde a verificação de carga da bateria' : falta.length ? 'Conclua todos os testes e preencha o técnico para imprimir' : 'Imprimir ficha';
+        printBtn.title = air ? 'Imprimir ficha (modo AirPrint)' : soBat ? 'Aguarde a verificação de carga da bateria' : falta.length ? 'Conclua todos os testes e preencha o técnico para imprimir' : 'Imprimir ficha';
         sendBtn.classList.toggle('locked', falta.length > 0);
         sendBtn.title = soBat ? 'Aguarde a verificação de carga da bateria' : falta.length ? 'Conclua todos os testes e preencha o técnico para enviar' : 'Enviar ficha';
+        if (air) {
+            gate.hidden = false;
+            gateTitle.textContent = 'Modo AirPrint: esta ficha já foi feita e está travada. Só a impressão está liberada (use “Imprimir na rede”).';
+            gateBtn.hidden = true;
+            list.innerHTML = '';
+            if (typeof updateHighlights === 'function') updateHighlights();
+            return;
+        }
+        gateBtn.hidden = false;
         gate.hidden = falta.length === 0;
         var soCampo = falta.length > 0 && falta.every(function (t) { return t.campo; });
         gateTitle.textContent = soCampo ? 'Preencha o nome do técnico para imprimir ou enviar a ficha:' : 'Conclua todos os testes e preencha o técnico para imprimir ou enviar a ficha:';
@@ -76,8 +89,10 @@
     };
 
     // imprimir e enviar passam pela mesma trava
-    function travado(fn) {
+    function travado(fn, imprimir) {
         return function () {
+            // modo AirPrint: a ficha já foi testada antes; imprimir passa direto (enviar continua travado)
+            if (imprimir && soImpressao()) return fn.apply(this, arguments);
             update();
             var falta = pending();
             if (falta.length) {
@@ -94,7 +109,7 @@
             return fn.apply(this, arguments);
         };
     }
-    window.fxPrint = travado(window.fxPrint);
+    window.fxPrint = travado(window.fxPrint, true);
     window.fxSend = travado(window.fxSend);
 
     // atualiza quando um checkbox muda ou quando áudio/touchpad marcam um resultado
