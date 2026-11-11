@@ -221,9 +221,9 @@
         if (ram.slots) mem += ` · ${ram.slots} ${ram.slots > 1 ? 'slots' : 'slot'}`;
         v.memoria = mem;
         v.hd = disks.map((x) => [gbLabel(x.gb), x.type === 'Unspecified' ? '' : x.type, x.bus, x.model ? '– ' + x.model : ''].filter(Boolean).join(' ')).join('  +  ');
-        c.m2 = d.platform !== 'mac' && disks.some((x) => /nvme/i.test(x.bus || ''));
-        // Mac: o SSD NVMe é soldado ou num conector próprio da Apple (não é M.2), então marca SSD
-        c.ssd = disks.some((x) => x.type === 'SSD' && (d.platform === 'mac' || !/nvme/i.test(x.bus || '')));
+        // NVMe marca M2 (Windows e Mac iguais); SSD fica para o SSD SATA
+        c.m2 = disks.some((x) => /nvme/i.test(x.bus || ''));
+        c.ssd = disks.some((x) => x.type === 'SSD' && !/nvme/i.test(x.bus || ''));
         c.hdd = disks.some((x) => x.type === 'HDD');
         v.teclado = kbdName(d.keyboard);
         if (v.teclado && window._numpadTested) v.teclado += ' + Numérico';
