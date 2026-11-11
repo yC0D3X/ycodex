@@ -191,7 +191,16 @@
         const mod = real(d.model);
         if (d.platform === 'mac' && !/\s/.test(fam)) fam = '';   // Mac Intel: ali vinha só o identificador (MacBookPro16,1)
         const mac = d.platform === 'mac' && Object.hasOwn(MACS, d.sku || '') ? MACS[d.sku] : null;
-        if (d.platform === 'mac') v.modelo = ((mac && mac[1]) || fam || mod) + (d.sku ? ` (${d.sku})` : '');
+        let nome = '';   // texto do "Dados coletados em ... — Apple ...": o nome completo, como sempre foi
+        if (d.platform === 'mac') {
+            const full = (mac && mac[1]) || fam || mod.replace(/\s*\(A\d{4}\)/, '');
+            nome = full + (d.sku ? ` (${d.sku})` : '');
+            // numero do modelo (A2141...): o script do Mac manda junto do nome, ex.: "MacBook Pro (A2141)".
+            // Com ele, o campo Modelo fica so "A2141 (2019)" (ano tirado do nome comercial); sem ele, o nome completo.
+            const anum = (mod.match(/\bA\d{4}\b/) || [])[0] || '';
+            const ano = (full.match(/\b(19|20)\d{2}\b/) || [])[0] || '';
+            v.modelo = anum ? anum + (ano ? ` (${ano})` : '') : nome;
+        }
         else if (fam && /lenovo/i.test(d.brand || '') && fam.toLowerCase() !== mod.toLowerCase()) v.modelo = `${fam} (${mod})`;
         else v.modelo = mod || fam;
         v.serial = real(d.serial);
@@ -245,7 +254,7 @@
         c.trackpoint = !!d.trackpoint;
         c.bluetooth = !!d.bt;
         c.nfc = !!d.nfc;
-        return { v, c };
+        return { v, c, nome: nome || v.modelo };
     }
 
     // ---------- estado (salvo no navegador para não perder ao recarregar) ----------
@@ -336,13 +345,17 @@
         needsConfirm: () => !!(state.bat && (state.bat.status === 'fail' || state.bat.status === 'unknown') && !state.bat.confirmed),
         confirm: () => { state.bat.confirmed = true; save(); }
     };
+    // modo AirPrint (opção 2 do comando no Windows): a máquina já foi testada; a ficha salva fica travada
+    // e só o Imprimir é liberado. Vale até chegar uma ficha nova (comando ou "Nova ficha").
+    window.fxPrintOnly = () => !!state.airprint;
 
     function applyData(d) {
-        const { v, c } = toSheet(d);
+        const { v, c, nome } = toSheet(d);
         state = empty();
         state.checks = c;
         state.ts = d.ts || '';
-        state.label = [v.marca, v.modelo].filter(Boolean).join(' ');
+        // "Dados coletados em ... — Apple MacBook Pro (...)": continua como antes, sem o numero A do Mac
+        state.label = [v.marca, nome].filter(Boolean).join(' ');
         // Windows: o comando está verificando se a bateria sobe carga; o resultado chega depois (#bateria=)
         const bt = (d.battery || {}).test;
         if (bt && bt.id) state.bat = { id: String(bt.id), started: Number(bt.started) || null, seconds: Number(bt.seconds) || 300, status: 'running' };
@@ -732,6 +745,22 @@ setO(saved === 'landscape' ? 'landscape' : 'portrait');
             chan.postMessage({ t: 'nova', id });
         }
     });
+    // modo AirPrint (#airprint): libera só a impressão da ficha salva; se a ficha já está em outra aba, avisa ela e fecha esta
+    else if (location.hash === '#airprint') {
+        history.replaceState(null, '', location.pathname + location.search);
+        switchTab('ficha');
+        if (state.ts) {
+            state.airprint = true;
+            save();
+            if (chan) {
+                const id = Math.random().toString(36).slice(2);
+                chan.addEventListener('message', (e) => { if (e.data && e.data.t === 'ok' && e.data.id === id) window.close(); });
+                chan.postMessage({ t: 'nova', id });
+            }
+        } else {
+            setTimeout(() => alert('Modo AirPrint: não há ficha salva neste navegador para imprimir.\n\nRode o comando de novo e escolha a opção 1 (Gerar ficha).'), 300);
+        }
+    }
     // verificação da bateria (#bateria=...): grava o resultado ou o novo início e, se a ficha está em outra aba, fecha esta
     else if (location.hash.indexOf('#bateria=') === 0) {
         let m = {};
