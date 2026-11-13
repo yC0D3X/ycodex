@@ -196,10 +196,12 @@
             const full = (mac && mac[1]) || fam || mod.replace(/\s*\(A\d{4}\)/, '');
             nome = full + (d.sku ? ` (${d.sku})` : '');
             // numero do modelo (A2141...): o script do Mac manda junto do nome, ex.: "MacBook Pro (A2141)".
-            // Com ele, o campo Modelo fica so "A2141 (2019)" (ano tirado do nome comercial); sem ele, o nome completo.
+            // Com ele, o campo Modelo fica "MacBook Pro A2141 (2019)": linha (MacBook Pro / MacBook Air...) + numero A
+            // + ano tirado do nome comercial; sem ele, o nome completo.
             const anum = (mod.match(/\bA\d{4}\b/) || [])[0] || '';
             const ano = (full.match(/\b(19|20)\d{2}\b/) || [])[0] || '';
-            v.modelo = anum ? anum + (ano ? ` (${ano})` : '') : nome;
+            const linha = mod.replace(/\s*\(A\d{4}\)/, '').trim();
+            v.modelo = anum ? [linha, anum, ano ? `(${ano})` : ''].filter(Boolean).join(' ') : nome;
         }
         else if (fam && /lenovo/i.test(d.brand || '') && fam.toLowerCase() !== mod.toLowerCase()) v.modelo = `${fam} (${mod})`;
         else v.modelo = mod || fam;
